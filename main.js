@@ -13,15 +13,18 @@ let currentShortcut = 'Alt+J';
 const dictionaryCache = new Map();
 const translationCache = new Map();
 
-// Helper to normalize macron vowels from romanization
-function normalizeMacrons(str) {
+// Helper to thoroughly clean macrons (both precomposed and combining macrons)
+function cleanRomaji(str) {
   if (!str) return '';
   return str
-    .replace(/[āĀ]/g, 'aa')
-    .replace(/[īĪ]/g, 'ii')
-    .replace(/[ūŪ]/g, 'uu')
-    .replace(/[ēĒ]/g, 'ee')
-    .replace(/[ōŌ]/g, 'ou');
+    .replace(/[āĀ\u0100\u0101]/g, 'aa')
+    .replace(/[īĪ\u012a\u012b]/g, 'ii')
+    .replace(/[ūŪ\u016a\u016b]/g, 'uu')
+    .replace(/[ēĒ\u0112\u0113]/g, 'ee')
+    .replace(/[ōŌ\u014c\u014d]/g, 'ou')
+    .replace(/\s*[\u0304\u02C9¯ˉ-]\s*/g, '-')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 // Curated local translation dictionary for instant offline responses
@@ -137,7 +140,6 @@ function expandWindow() {
     height: EXPANDED_HEIGHT
   });
 
-  mainWindow.webContents.send('action:toggle-expand', true);
   mainWindow.show();
   mainWindow.focus();
 }
@@ -153,13 +155,12 @@ function collapseWindow() {
     width: BUBBLE_WIDTH,
     height: BUBBLE_HEIGHT
   });
-
-  mainWindow.webContents.send('action:toggle-expand', false);
 }
 
 function toggleWindow() {
   if (isExpanded) {
-    collapseWindow();
+    // Notify renderer that the user pressed the global toggle hotkey to close & copy
+    mainWindow.webContents.send('action:shortcut-toggle');
   } else {
     expandWindow();
   }
@@ -289,13 +290,10 @@ ipcMain.handle('translate:to-japanese', async (_event, text) => {
 
     const jaText = data[0][0][0] || '';
     const rawRomaji = data[0][1] ? data[0][1][2] : '';
-    const romaji = normalizeMacrons(rawRomaji).toLowerCase().trim();
+    const romaji = cleanRomaji(rawRomaji).replace(/\s+/g, ' ').trim();
 
-    // Check if jaText is purely Kana or has Kanji
-    const hasKanji = /[\u4e00-\u9faf]/.test(jaText);
-
-    // If word is "kamu", special case for kanji "貴方"
-    let kanji = hasKanji ? jaText : '';
+    // Special case for pronoun "kamu/you" -> "貴方"
+    let kanji = jaText;
     if (clean === 'kamu' || clean === 'anda' || clean === 'you') {
       kanji = '貴方';
     }

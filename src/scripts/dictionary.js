@@ -239,7 +239,7 @@ const NihongoDictionary = {
 
   /**
    * Translate non-Japanese (Indonesian / English) into Japanese.
-   * @param {string} text - e.g., 'kamu', 'terima kasih', 'makan'
+   * @param {string} text - e.g., 'kamu', 'terima kasih', 'Damn, what are you doing my brother?'
    * @returns {Promise<{ hiragana: string, katakana: string, kanji: string, romaji: string, meaning: string } | null>}
    */
   async translate(text) {
@@ -255,8 +255,8 @@ const NihongoDictionary = {
           let hiragana = res.hiragana;
           let katakana = res.katakana;
 
-          // If not precomputed, compute using global wanakana
-          if (!hiragana && typeof wanakana !== 'undefined' && romaji) {
+          // Convert cleaned romaji to proper Hiragana & Katakana
+          if (typeof wanakana !== 'undefined' && romaji) {
             hiragana = wanakana.toHiragana(romaji);
             katakana = wanakana.toKatakana(romaji);
           }

@@ -226,20 +226,18 @@ function stopRecordingShortcut() {
   lblRecordBadge.textContent = dict.shortcutRecordHint;
 }
 
-// Global key listener for recording shortcuts (Accepts Enter, Function keys, Combinations, etc.)
+// Global key listener for recording shortcuts
 window.addEventListener('keydown', (e) => {
   if (!isRecordingShortcut) return;
 
   e.preventDefault();
   e.stopPropagation();
 
-  // Escape cancels recording
   if (e.key === 'Escape') {
     stopRecordingShortcut();
     return;
   }
 
-  // Ignore if only a modifier is pressed (waiting for key)
   if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
     const parts = [];
     if (e.ctrlKey) parts.push('Ctrl');
@@ -250,7 +248,6 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Construct Electron Accelerator format
   const acceleratorParts = [];
   if (e.ctrlKey) acceleratorParts.push('CommandOrControl');
   if (e.altKey) acceleratorParts.push('Alt');
@@ -258,9 +255,8 @@ window.addEventListener('keydown', (e) => {
   if (e.metaKey) acceleratorParts.push('Super');
 
   let mainKey = '';
-  // Support Enter directly!
   if (e.key === 'Enter') {
-    mainKey = 'Return'; // Electron accelerator name for Enter
+    mainKey = 'Return';
   } else if (e.code.startsWith('Key')) {
     mainKey = e.code.replace('Key', '').toUpperCase();
   } else if (e.code.startsWith('Digit')) {
@@ -404,6 +400,7 @@ function updateConversion() {
           textMeaningDef.textContent = match.meaning || '-';
         } else {
           const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+          currentKanji = '';
           wrapMeaningKanji.style.display = 'none';
           lblMeaningBadge.style.display = 'none';
           textMeaningDef.textContent = dict.meaningNotFound;
@@ -432,6 +429,7 @@ function updateConversion() {
           textKatakana.textContent = currentKatakana || '-';
 
           if (trans.kanji && trans.kanji !== '-') {
+            currentKanji = trans.kanji;
             textMeaningKanji.textContent = trans.kanji;
             wrapMeaningKanji.style.display = 'inline-flex';
           } else {
@@ -443,6 +441,9 @@ function updateConversion() {
           const romajiBadge = trans.romaji ? `${trans.romaji.toUpperCase()} • ` : '';
           textMeaningDef.textContent = `${romajiBadge}${trans.meaning || clean}`;
         } else {
+          currentHiragana = '';
+          currentKatakana = '';
+          currentKanji = '';
           textHiragana.textContent = '-';
           textKatakana.textContent = '-';
           wrapMeaningKanji.style.display = 'none';
@@ -482,12 +483,18 @@ async function copyAndFinish(text) {
 tabModeRomaji.addEventListener('click', () => setMode('romaji'));
 tabModeTranslate.addEventListener('click', () => setMode('translate'));
 
-// Click Kanji badge to copy
+// Click Kanji badge to copy (Copies actual Kanji / Japanese text!)
 wrapMeaningKanji.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (currentKanji) {
-    const primaryKanji = currentKanji.split('/')[0].trim();
-    copyAndFinish(primaryKanji);
+  let textToCopy = '';
+  if (currentKanji && currentKanji !== '-') {
+    textToCopy = currentKanji.split('/')[0].trim();
+  } else if (textMeaningKanji.textContent && textMeaningKanji.textContent !== '-') {
+    textToCopy = textMeaningKanji.textContent.trim();
+  }
+
+  if (textToCopy) {
+    copyAndFinish(textToCopy);
   }
 });
 
@@ -549,7 +556,6 @@ btnSaveSettings.addEventListener('click', async (e) => {
   applyLanguage(selectedLangTemp);
   updateConversion();
 
-  // Apply Custom Shortcut (including 'Return' for Enter)
   const newShortcut = recordedShortcut;
   if (newShortcut !== currentShortcut && window.nihongoAPI && window.nihongoAPI.updateGlobalShortcut) {
     const success = await window.nihongoAPI.updateGlobalShortcut(newShortcut);
@@ -622,7 +628,14 @@ romajiInput.addEventListener('keydown', (e) => {
 
   if (e.key === 'Enter') {
     e.preventDefault();
-    if (e.shiftKey) {
+    if (e.ctrlKey) {
+      if (currentKanji && currentKanji !== '-') {
+        const primaryKanji = currentKanji.split('/')[0].trim();
+        copyAndFinish(primaryKanji);
+      } else if (textMeaningKanji.textContent && textMeaningKanji.textContent !== '-') {
+        copyAndFinish(textMeaningKanji.textContent.trim());
+      }
+    } else if (e.shiftKey) {
       if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
     } else {
       if (currentHiragana && currentHiragana !== '-') copyAndFinish(currentHiragana);
@@ -638,17 +651,14 @@ cardKatakana.addEventListener('click', () => {
   if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
 });
 
-// Shortcut toggle listener from Main
-if (window.nihongoAPI && window.nihongoAPI.onToggleExpand) {
-  window.nihongoAPI.onToggleExpand((expanded) => {
-    if (expanded) {
-      setExpandedMode(true);
+// Global hotkey toggle listener from Main (ONLY triggered by physical hotkey)
+if (window.nihongoAPI && window.nihongoAPI.onShortcutToggle) {
+  window.nihongoAPI.onShortcutToggle(() => {
+    // If input has text, copy Hiragana and close
+    if (currentHiragana && currentHiragana !== '-') {
+      copyAndFinish(currentHiragana);
     } else {
-      if (currentHiragana && currentHiragana !== '-') {
-        copyAndFinish(currentHiragana);
-      } else {
-        requestCollapse();
-      }
+      requestCollapse();
     }
   });
 }
