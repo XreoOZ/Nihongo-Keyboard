@@ -10,8 +10,8 @@
   <div id="app" class="mode-bubble">
 
     <!-- 1. BUBBLE VIEW (Idle State) -->
-    <div id="bubble-view" id="bubble-tooltip-container" title="Nihongo Keyboard (Klik atau Alt+J)">
-      <div class="drag-handle" id="drag-tooltip" title="Tahan & geser untuk memindahkan">
+    <div id="bubble-view" title="Nihongo Keyboard (Klik atau Alt+J)">
+      <div class="drag-handle" title="Tahan & geser untuk memindahkan">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="5" r="2.5"/>
           <circle cx="19" cy="5" r="2.5"/>
@@ -97,6 +97,24 @@
           </div>
         </div>
 
+        <!-- Meaning / Dictionary Card (Poin 2) -->
+        <div class="meaning-card" id="card-meaning">
+          <div class="meaning-header">
+            <div class="meaning-title-wrap">
+              <span class="meaning-icon">📖</span>
+              <span class="meaning-tag" id="lbl-tag-meaning">ARTI / MAKNA</span>
+            </div>
+            <span class="jlpt-tag" id="lbl-meaning-badge" style="display: none;">JLPT</span>
+          </div>
+          <div class="meaning-body">
+            <div class="meaning-kanji-wrap" id="wrap-meaning-kanji" style="display: none;" title="Klik untuk salin Kanji">
+              <span class="meaning-kanji" id="text-meaning-kanji">-</span>
+              <span class="kanji-copy-hint" id="lbl-kanji-hint">klik salin</span>
+            </div>
+            <div class="meaning-text" id="text-meaning-def">Ketik kata Jepang untuk melihat arti...</div>
+          </div>
+        </div>
+
         <!-- Status Tip -->
         <div class="status-bar">
           <span class="status-tip" id="lbl-status-tip">💡 <strong>Enter</strong> = Hiragana | <strong>Shift+Enter</strong> = Katakana | <strong>Esc</strong> = Tutup</span>
@@ -111,7 +129,6 @@
         </div>
 
         <div class="settings-body">
-          <!-- Setting: Language -->
           <div class="setting-item">
             <label class="setting-label" for="select-lang" id="lbl-setting-lang">Bahasa Tampilan</label>
             <div class="lang-pills">
@@ -120,7 +137,6 @@
             </div>
           </div>
 
-          <!-- Setting: Global Shortcut -->
           <div class="setting-item">
             <label class="setting-label" for="select-shortcut" id="lbl-setting-shortcut">Shortcut Global</label>
             <select id="select-shortcut" class="setting-select">
@@ -147,6 +163,7 @@
   <!-- Scripts -->
   <script src="scripts/wanakana.min.js"></script>
   <script src="scripts/i18n.js"></script>
+  <script src="scripts/dictionary.js"></script>
   <script src="scripts/converter.js"></script>
   <script src="scripts/renderer.js"></script>
 </body>

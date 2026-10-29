@@ -10,12 +10,13 @@ app.commandLine.appendSwitch('no-sandbox');
 let mainWindow = null;
 let isExpanded = false;
 let currentShortcut = 'Alt+J';
+const dictionaryCache = new Map();
 
 // Dimensions
 const BUBBLE_WIDTH = 64;
 const BUBBLE_HEIGHT = 64;
-const EXPANDED_WIDTH = 410;
-const EXPANDED_HEIGHT = 190;
+const EXPANDED_WIDTH = 420;
+const EXPANDED_HEIGHT = 250;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -68,7 +69,6 @@ function registerShortcut(newShortcut) {
       return true;
     }
 
-    // Fallback if failed
     if (newShortcut !== 'Alt+J') {
       globalShortcut.register('Alt+J', () => toggleWindow());
       currentShortcut = 'Alt+J';
@@ -185,6 +185,47 @@ ipcMain.handle('shortcut:get', () => {
 ipcMain.handle('shortcut:update', (_event, newShortcut) => {
   if (!newShortcut || typeof newShortcut !== 'string') return false;
   return registerShortcut(newShortcut);
+});
+
+// Online Jisho API Lookup with in-memory caching
+ipcMain.handle('dictionary:lookup', async (_event, keyword) => {
+  if (!keyword || typeof keyword !== 'string') return null;
+  const clean = keyword.toLowerCase().trim();
+  if (dictionaryCache.has(clean)) {
+    return dictionaryCache.get(clean);
+  }
+
+  try {
+    const url = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(clean)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.data || json.data.length === 0) return null;
+
+    const entry = json.data[0];
+    const jp = entry.japanese && entry.japanese[0] ? entry.japanese[0] : {};
+    const senses = entry.senses && entry.senses[0] ? entry.senses[0] : {};
+
+    const result = {
+      kanji: jp.word || jp.reading || '',
+      reading: jp.reading || '',
+      jlpt: (entry.jlpt && entry.jlpt[0]) ? entry.jlpt[0].replace('jlpt-', '').toUpperCase() : '',
+      meaning: (senses.english_definitions && senses.english_definitions.length > 0)
+        ? senses.english_definitions.slice(0, 3).join(', ')
+        : ''
+    };
+
+    dictionaryCache.set(clean, result);
+    return result;
+  } catch (err) {
+    console.error('Dictionary API lookup error:', err.message);
+    return null;
+  }
 });
 
 ipcMain.handle('app:quit', () => {

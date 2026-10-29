@@ -22,6 +22,15 @@ const cardKatakana = document.getElementById('card-katakana');
 const textKatakana = document.getElementById('text-katakana');
 const toastMessage = document.getElementById('toast-message');
 
+// Meaning / Dictionary Elements
+const cardMeaning = document.getElementById('card-meaning');
+const lblTagMeaning = document.getElementById('lbl-tag-meaning');
+const lblMeaningBadge = document.getElementById('lbl-meaning-badge');
+const wrapMeaningKanji = document.getElementById('wrap-meaning-kanji');
+const textMeaningKanji = document.getElementById('text-meaning-kanji');
+const lblKanjiHint = document.getElementById('lbl-kanji-hint');
+const textMeaningDef = document.getElementById('text-meaning-def');
+
 // Labels for localization
 const lblAppTitle = document.getElementById('lbl-app-title');
 const lblTagHiragana = document.getElementById('lbl-tag-hiragana');
@@ -35,7 +44,9 @@ const lblSettingShortcut = document.getElementById('lbl-setting-shortcut');
 
 let currentHiragana = '';
 let currentKatakana = '';
+let currentKanji = '';
 let toastTimeout = null;
+let searchDebounceTimeout = null;
 
 // ==========================================
 // Settings & Localization (i18n) State
@@ -56,7 +67,6 @@ function applyLanguage(lang) {
   const dict = window.I18N && window.I18N[lang] ? window.I18N[lang] : window.I18N['id'];
   if (!dict) return;
 
-  // Update DOM strings
   if (lblAppTitle) lblAppTitle.textContent = dict.appTitle;
   if (romajiInput) romajiInput.placeholder = dict.inputPlaceholder;
   if (lblTagHiragana) lblTagHiragana.textContent = dict.cardHiragana;
@@ -64,6 +74,13 @@ function applyLanguage(lang) {
   if (lblHintHiragana) lblHintHiragana.textContent = dict.keyHintHiragana;
   if (lblHintKatakana) lblHintKatakana.textContent = dict.keyHintKatakana;
   if (lblStatusTip) lblStatusTip.innerHTML = dict.statusTip;
+
+  // Meaning card localization
+  if (lblTagMeaning) lblTagMeaning.textContent = dict.cardMeaning;
+  if (lblKanjiHint) lblKanjiHint.textContent = dict.kanjiCopyHint;
+  if (!romajiInput.value.trim() && textMeaningDef) {
+    textMeaningDef.textContent = dict.meaningPlaceholder;
+  }
 
   if (lblSettingsTitle) lblSettingsTitle.textContent = dict.settingsTitle;
   if (lblSettingLang) lblSettingLang.textContent = dict.langLabel;
@@ -76,7 +93,6 @@ function applyLanguage(lang) {
   if (btnClose) btnClose.title = dict.closeBtnTitle;
   if (btnClear) btnClear.title = dict.clearBtnTitle;
 
-  // Update pills UI
   pillLangId.classList.toggle('active', selectedLangTemp === 'id');
   pillLangEn.classList.toggle('active', selectedLangTemp === 'en');
 }
@@ -191,8 +207,16 @@ function showToast(message) {
 }
 
 // ==========================================
-// Conversion Logic
+// Conversion & Dictionary Lookup Logic
 // ==========================================
+function resetMeaningCard() {
+  const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+  currentKanji = '';
+  wrapMeaningKanji.style.display = 'none';
+  lblMeaningBadge.style.display = 'none';
+  textMeaningDef.textContent = dict.meaningPlaceholder;
+}
+
 function updateConversion() {
   const query = romajiInput.value;
   btnClear.style.display = query.length > 0 ? 'block' : 'none';
@@ -202,15 +226,54 @@ function updateConversion() {
     currentKatakana = '';
     textHiragana.textContent = '-';
     textKatakana.textContent = '-';
+    resetMeaningCard();
     return;
   }
 
+  // 1. Instant Kana Conversion
   const result = window.NihongoConverter ? window.NihongoConverter.convert(query) : { hiragana: query, katakana: query };
   currentHiragana = result.hiragana;
   currentKatakana = result.katakana;
 
   textHiragana.textContent = currentHiragana || '-';
   textKatakana.textContent = currentKatakana || '-';
+
+  // 2. Debounced Meaning & Kanji Lookup (Poin 2)
+  if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
+  searchDebounceTimeout = setTimeout(async () => {
+    const cleanWord = query.trim().toLowerCase();
+    if (!cleanWord) return;
+
+    if (window.NihongoDictionary) {
+      const match = await window.NihongoDictionary.search(cleanWord, currentLang);
+      if (match) {
+        // Kanji display
+        if (match.kanji && match.kanji !== '-') {
+          currentKanji = match.kanji;
+          textMeaningKanji.textContent = match.kanji;
+          wrapMeaningKanji.style.display = 'inline-flex';
+        } else {
+          wrapMeaningKanji.style.display = 'none';
+        }
+
+        // JLPT badge
+        if (match.jlpt) {
+          lblMeaningBadge.textContent = match.jlpt.startsWith('JLPT') ? match.jlpt : `JLPT ${match.jlpt}`;
+          lblMeaningBadge.style.display = 'inline-block';
+        } else {
+          lblMeaningBadge.style.display = 'none';
+        }
+
+        // Definition text
+        textMeaningDef.textContent = match.meaning || '-';
+      } else {
+        const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+        wrapMeaningKanji.style.display = 'none';
+        lblMeaningBadge.style.display = 'none';
+        textMeaningDef.textContent = dict.meaningNotFound;
+      }
+    }
+  }, 220);
 }
 
 // ==========================================
@@ -237,6 +300,16 @@ async function copyAndFinish(text) {
 // ==========================================
 // Event Listeners
 // ==========================================
+
+// Click Kanji badge to copy
+wrapMeaningKanji.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentKanji) {
+    // If multiple kanji like "神 / 髪 / 紙", copy first or full
+    const primaryKanji = currentKanji.split('/')[0].trim();
+    copyAndFinish(primaryKanji);
+  }
+});
 
 // Settings triggers
 btnSettings.addEventListener('click', (e) => {
@@ -277,6 +350,7 @@ btnSaveSettings.addEventListener('click', async (e) => {
 
   // 1. Apply language
   applyLanguage(selectedLangTemp);
+  updateConversion(); // Refresh meaning in selected language
 
   // 2. Apply Shortcut
   const newShortcut = selectShortcut.value;

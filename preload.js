@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('nihongoAPI', {
   quitApp: () => ipcRenderer.invoke('app:quit'),
   updateGlobalShortcut: (shortcut) => ipcRenderer.invoke('shortcut:update', shortcut),
   getGlobalShortcut: () => ipcRenderer.invoke('shortcut:get'),
+  lookupWord: (word) => ipcRenderer.invoke('dictionary:lookup', word),
   onToggleExpand: (callback) => {
     ipcRenderer.on('action:toggle-expand', (_event, expanded) => callback(expanded));
   }

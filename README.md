@@ -1,6 +1,6 @@
 # 🌸 Nihongo Keyboard (Floating Overlay)
 
-Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jendela aplikasi (*Always-on-Top*), dengan konversi teks Latin (Romaji) ke Hiragana dan Katakana secara instan (*real-time*).
+Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jendela aplikasi (*Always-on-Top*), dengan konversi teks Latin (Romaji) ke Hiragana dan Katakana secara instan (*real-time*), serta kamus arti kata terintegrasi.
 
 ---
 
@@ -15,6 +15,12 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
   - Ketik: `kamu` $\rightarrow$ Otomatis muncul **Hiragana (`かむ`)** dan **Katakana (`カム`)**.
   - Ketik: `arigatou` $\rightarrow$ `ありがとう` / `アリガトウ`.
   - Ketik: `nihon` $\rightarrow$ `にほん` / `ニホン`.
+- **📖 Layar Arti Kata & Kanji (Meaning Screen):**
+  - Di bawah kartu Kana, terdapat layar definisi kata yang menampilkan arti dalam Bahasa Indonesia / English.
+  - Menampilkan padanan **Kanji** (misal `噛む`, `日本`, `有難う`, atau homofon `神 / 髪 / 紙`).
+  - Badge level **JLPT** (N5 - N1 / Common).
+  - **Klik badge Kanji** untuk langsung menyalin Kanji ke clipboard!
+  - Didukung database lokal instan (0ms) + integrasi online **Jisho API** secara otomatis.
 - **Shortcut Cepat Salin & Tutup:**
   - Tekan `Enter` $\rightarrow$ Salin **Hiragana** ke clipboard dan otomatis ciutkan kembali ke bubble.
   - Tekan `Shift + Enter` atau `Tab` $\rightarrow$ Salin **Katakana** ke clipboard.
@@ -30,18 +36,19 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
 
 ```text
 Nihongo Keyboard/
-├── main.js                 # Electron Main Process (Lifecycle, Window, Dynamic Global Hotkey, AlwaysOnTop)
+├── main.js                 # Electron Main Process (Lifecycle, Window, Jisho API IPC, AlwaysOnTop)
 ├── preload.js              # Context Bridge aman antara Electron & Renderer
 ├── package.json            # Manifest & dependencies
 ├── README.md               # Dokumentasi project
 └── src/
-    ├── index.html          # Tampilan UI (Bubble, Expanded Bar, & Settings Panel)
+    ├── index.html          # Tampilan UI (Bubble, Expanded Bar, Meaning Screen & Settings)
     ├── styles/
     │   └── style.css       # Desain Glassmorphism & efek modern
     └── scripts/
-        ├── i18n.js         # Modul kamus multibahasa (ID / EN)
+        ├── i18n.js         # Modul kamus multibahasa UI (ID / EN)
+        ├── dictionary.js   # Modul kamus arti kata (Database lokal + Jisho API)
         ├── converter.js    # Modul wrapper konversi Romaji -> Kana
-        ├── renderer.js     # Logika interaksi UI, Settings, keyboard shortcut
+        ├── renderer.js     # Logika interaksi UI, debouncing, & event listener
         └── wanakana.min.js # Engine konversi WanaKana
 ```
 
