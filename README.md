@@ -27,6 +27,10 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
   - Menampilkan padanan **Kanji** (misal `貴方`, `噛む`, `日本`, `有難う`).
   - **Klik badge Kanji** untuk langsung menyalin Kanji ke clipboard!
   - Menampilkan badge level **JLPT** (N5 - N1 / Common).
+- **⌨️ Key Recorder (Shortcut Bebas Sesuai Keinginan):**
+  - Bukan cuma opsi kaku! Kamu bisa merekam dan mengatur **kombinasi tombol apa pun** yang kamu inginkan (misal `Ctrl + Alt + K`, `Alt + Space`, `Shift + Alt + Z`, tombol fungsi `F9`, dll).
+  - Cukup klik tombol shortcut di Settings, lalu tekan tombol keyboard yang kamu mau.
+  - Ada tombol reset `↺` untuk kembali ke default (`Alt + J`).
 - **Shortcut Cepat Salin & Tutup:**
   - Tekan `Enter` $\rightarrow$ Salin **Hiragana** ke clipboard dan otomatis ciutkan kembali ke bubble.
   - Tekan `Shift + Enter` atau `Tab` $\rightarrow$ Salin **Katakana** ke clipboard.
@@ -34,7 +38,6 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
   - Tekan `Ctrl + T` $\rightarrow$ Beralih cepat antara **Romaji Mode** $\leftrightarrow$ **Translate Mode**.
 - **⚙️ Settings & Dukungan Multibahasa (EN / ID):**
   - Ubah bahasa tampilan antarmuka antara **Bahasa Indonesia 🇮🇩** atau **English 🇬🇧**.
-  - Kustomisasi tombol **Global Shortcut** langsung dari menu Settings (`Alt + J`, `Ctrl + Shift + Space`, `Alt + K`, dll).
 
 ---
 
@@ -54,7 +57,7 @@ Nihongo Keyboard/
         ├── i18n.js         # Modul kamus multibahasa UI (ID / EN)
         ├── dictionary.js   # Modul kamus arti kata & pipeline terjemahan
         ├── converter.js    # Modul wrapper konversi Romaji -> Kana
-        ├── renderer.js     # Logika interaksi UI, debouncing, & event listener
+        ├── renderer.js     # Logika interaksi UI, Key Recorder, & event listener
         └── wanakana.min.js # Engine konversi WanaKana
 ```
 
@@ -74,7 +77,7 @@ npm start
 
 | Shortcut | Aksi |
 | :--- | :--- |
-| **`Alt + J`** *(Bisa diubah di Settings)* | Buka / Sembunyikan window dari aplikasi mana pun (*Global Hotkey*) |
+| **`Alt + J`** *(Bisa diset bebas di Settings)* | Buka / Sembunyikan window dari aplikasi mana pun (*Global Hotkey*) |
 | **`Ctrl + T`** | Ganti Mode (*Romaji Mode* $\leftrightarrow$ *Translate Mode*) |
 | **`Enter`** | Salin hasil **Hiragana** ke clipboard & tutup ke bubble |
 | **`Shift + Enter`** / **`Tab`** | Salin hasil **Katakana** ke clipboard & tutup ke bubble |

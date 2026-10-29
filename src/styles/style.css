@@ -391,7 +391,7 @@ html, body {
 }
 
 /* =========================================================
-   MEANING / DICTIONARY CARD (Poin 2)
+   MEANING / DICTIONARY CARD
    ========================================================= */
 .meaning-card {
   -webkit-app-region: no-drag;
@@ -602,26 +602,87 @@ html, body {
   box-shadow: 0 2px 6px rgba(244, 63, 94, 0.4);
 }
 
-/* Select Dropdown */
-.setting-select {
+/* Shortcut Key Recorder Widget */
+.shortcut-recorder-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-record-shortcut {
   background: rgba(30, 41, 59, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
-  font-size: 11px;
-  padding: 4px 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.setting-select:focus {
-  border-color: #f43f5e;
-}
-
-.setting-select option {
-  background: #0f172a;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #f8fafc;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  min-width: 130px;
+  justify-content: space-between;
+}
+
+.btn-record-shortcut:hover {
+  border-color: rgba(244, 63, 94, 0.5);
+  background: rgba(30, 41, 59, 1);
+}
+
+.btn-record-shortcut.recording {
+  border-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.15);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.25);
+  animation: borderGlow 1.5s infinite;
+}
+
+@keyframes borderGlow {
+  0% { box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.3); }
+  50% { box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.6); }
+  100% { box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.3); }
+}
+
+#txt-record-shortcut {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: 0.3px;
+}
+
+.record-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.btn-record-shortcut.recording .record-badge {
+  background: #f43f5e;
+  color: #fff;
+}
+
+.btn-reset-shortcut {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #94a3b8;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-shortcut:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 /* Settings Footer */

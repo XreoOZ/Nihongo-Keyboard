@@ -140,6 +140,7 @@
         </div>
 
         <div class="settings-body">
+          <!-- Language Option -->
           <div class="setting-item">
             <label class="setting-label" for="select-lang" id="lbl-setting-lang">Bahasa Tampilan</label>
             <div class="lang-pills">
@@ -148,14 +149,16 @@
             </div>
           </div>
 
+          <!-- Interactive Custom Shortcut Key Recorder -->
           <div class="setting-item">
-            <label class="setting-label" for="select-shortcut" id="lbl-setting-shortcut">Shortcut Global</label>
-            <select id="select-shortcut" class="setting-select">
-              <option value="Alt+J">Alt + J (Default)</option>
-              <option value="CommandOrControl+Shift+Space">Ctrl + Shift + Space</option>
-              <option value="Alt+K">Alt + K</option>
-              <option value="Alt+Space">Alt + Space</option>
-            </select>
+            <label class="setting-label" id="lbl-setting-shortcut">Shortcut Global</label>
+            <div class="shortcut-recorder-wrap">
+              <button type="button" id="btn-record-shortcut" class="btn-record-shortcut" title="Klik lalu tekan kombinasi tombol apa pun di keyboard">
+                <span id="txt-record-shortcut">Alt + J</span>
+                <span class="record-badge" id="lbl-record-badge">Klik ubah</span>
+              </button>
+              <button type="button" id="btn-reset-shortcut" class="btn-reset-shortcut" title="Kembalikan ke default (Alt + J)">↺</button>
+            </div>
           </div>
         </div>
 
