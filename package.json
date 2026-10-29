@@ -1,0 +1,21 @@
+{
+  "name": "nihongo-keyboard",
+  "version": "1.0.0",
+  "description": "Floating overlay Nihongo keyboard with Romaji to Kana conversion",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "japanese",
+    "nihongo",
+    "keyboard",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^45.1.0",
+    "wanakana": "^5.3.1"
+  }
+}

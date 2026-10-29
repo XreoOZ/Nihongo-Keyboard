@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nihongo Keyboard</title>
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+  <div id="app" class="mode-bubble">
+
+    <!-- 1. BUBBLE VIEW (Idle State) -->
+    <div id="bubble-view" title="Nihongo Keyboard (Klik atau Alt+J)">
+      <div class="drag-handle" title="Tahan & geser untuk memindahkan">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="5" r="2.5"/>
+          <circle cx="19" cy="5" r="2.5"/>
+          <circle cx="5" cy="12" r="2.5"/>
+          <circle cx="19" cy="12" r="2.5"/>
+          <circle cx="5" cy="19" r="2.5"/>
+          <circle cx="19" cy="19" r="2.5"/>
+        </svg>
+      </div>
+      <button id="btn-open-bubble" class="bubble-btn" aria-label="Buka Nihongo Keyboard">
+        <span class="bubble-kanji">日</span>
+        <span class="bubble-sub">語</span>
+      </button>
+      <div class="bubble-pulse"></div>
+    </div>
+
+    <!-- 2. EXPANDED VIEW (Input & Conversion State) -->
+    <div id="expanded-view">
+      <!-- Header bar (Draggable) -->
+      <header class="window-header">
+        <div class="header-title">
+          <span class="header-icon">日</span>
+          <span class="header-text">Nihongo Keyboard</span>
+          <span class="shortcut-tag">Alt + J</span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-minimize" class="icon-btn" title="Kecilkan ke bubble (Esc)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button id="btn-close" class="icon-btn icon-btn-close" title="Tutup aplikasi">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Input Section -->
+      <div class="input-section">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="romaji-input" 
+            placeholder="Ketik romaji (contoh: kamu, arigatou, nihon)..." 
+            autocomplete="off" 
+            spellcheck="false"
+          />
+          <button id="btn-clear" class="btn-clear" title="Hapus teks">✕</button>
+        </div>
+      </div>
+
+      <!-- Live Conversion Results -->
+      <div class="results-grid">
+        <!-- Hiragana Card -->
+        <div class="result-card" id="card-hiragana" data-target="hiragana" title="Klik atau tekan Enter untuk salin">
+          <div class="card-header">
+            <span class="card-tag">HIRAGANA</span>
+            <span class="key-hint">Enter ↵</span>
+          </div>
+          <div class="card-body">
+            <span class="result-text" id="text-hiragana">-</span>
+          </div>
+        </div>
+
+        <!-- Katakana Card -->
+        <div class="result-card" id="card-katakana" data-target="katakana" title="Klik atau tekan Shift+Enter untuk salin">
+          <div class="card-header">
+            <span class="card-tag">KATAKANA</span>
+            <span class="key-hint">Shift+Enter ⇧↵</span>
+          </div>
+          <div class="card-body">
+            <span class="result-text" id="text-katakana">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Tips Bar -->
+      <div class="status-bar">
+        <span class="status-tip">💡 <strong>Enter</strong> = Hiragana | <strong>Shift+Enter</strong> = Katakana | <strong>Esc</strong> = Tutup</span>
+      </div>
+
+      <!-- Toast Feedback -->
+      <div id="toast-message" class="toast-hidden">✓ Tersalin ke Clipboard!</div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/wanakana.min.js"></script>
+  <script src="scripts/converter.js"></script>
+  <script src="scripts/renderer.js"></script>
+</body>
+</html>
