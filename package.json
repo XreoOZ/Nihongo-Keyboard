@@ -12,8 +12,12 @@
     "keyboard",
     "electron"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "XreoOZ <ghilmanyazid337@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XreoOZ/Nihongo-Keyboard.git"
+  },
   "dependencies": {
     "electron": "^45.1.0",
     "wanakana": "^5.3.1"
