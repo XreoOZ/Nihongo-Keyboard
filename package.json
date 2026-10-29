@@ -1,10 +1,30 @@
 {
   "name": "nihongo-keyboard",
   "version": "1.0.0",
-  "description": "Floating overlay Nihongo keyboard with Romaji to Kana conversion",
+  "description": "Floating overlay Nihongo keyboard with Romaji to Kana conversion and Translation",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.xreooz.nihongokeyboard",
+    "productName": "Nihongo Keyboard",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ]
   },
   "keywords": [
     "japanese",
@@ -19,7 +39,10 @@
     "url": "git+https://github.com/XreoOZ/Nihongo-Keyboard.git"
   },
   "dependencies": {
-    "electron": "^45.1.0",
     "wanakana": "^5.3.1"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0",
+    "electron-builder": "^26.0.12"
   }
 }

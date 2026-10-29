@@ -65,11 +65,20 @@ Nihongo Keyboard/
 
 ## 💻 Cara Menjalankan Aplikasi
 
+### Mode Development:
 Pastikan sudah berada di direktori project:
 ```bash
 npm start
 ```
 *(atau double-click file `run.bat`)*
+
+### 📦 Cara Build Menjadi File Standalone (.EXE):
+Untuk membuat file installer / portable `.exe` mandiri yang bisa dijalankan di laptop mana pun tanpa perlu Node.js:
+```bash
+npm run build
+```
+Hasil file `.exe` siap pakai akan otomatis berada di folder:
+`dist/Nihongo Keyboard 1.0.0.exe`
 
 ---
 
