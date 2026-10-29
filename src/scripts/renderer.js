@@ -93,11 +93,13 @@ let selectedLangTemp = currentLang;
 
 function formatShortcutLabel(shortcut) {
   if (!shortcut) return 'Alt + J';
+  if (shortcut === 'Return') return 'Enter';
   return shortcut
     .replace(/CommandOrControl/g, 'Ctrl')
     .replace(/Command/g, 'Cmd')
     .replace(/Control/g, 'Ctrl')
     .replace(/Super/g, 'Win')
+    .replace(/Return/g, 'Enter')
     .replace(/\+/g, ' + ');
 }
 
@@ -224,7 +226,7 @@ function stopRecordingShortcut() {
   lblRecordBadge.textContent = dict.shortcutRecordHint;
 }
 
-// Global key listener for recording shortcuts
+// Global key listener for recording shortcuts (Accepts Enter, Function keys, Combinations, etc.)
 window.addEventListener('keydown', (e) => {
   if (!isRecordingShortcut) return;
 
@@ -237,7 +239,7 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
-  // Ignore if only a modifier is pressed
+  // Ignore if only a modifier is pressed (waiting for key)
   if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
     const parts = [];
     if (e.ctrlKey) parts.push('Ctrl');
@@ -245,16 +247,6 @@ window.addEventListener('keydown', (e) => {
     if (e.shiftKey) parts.push('Shift');
     if (e.metaKey) parts.push('Win');
     txtRecordShortcut.textContent = parts.join(' + ') + ' + ...';
-    return;
-  }
-
-  // Validate: must have at least one modifier key OR be an F1-F12 key
-  const isFKey = /^F([1-9]|1[0-2])$/i.test(e.key);
-  const hasModifier = e.ctrlKey || e.altKey || e.shiftKey || e.metaKey;
-
-  if (!hasModifier && !isFKey) {
-    const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
-    showToast(dict.shortcutNeedsModifier);
     return;
   }
 
@@ -266,11 +258,14 @@ window.addEventListener('keydown', (e) => {
   if (e.metaKey) acceleratorParts.push('Super');
 
   let mainKey = '';
-  if (e.code.startsWith('Key')) {
+  // Support Enter directly!
+  if (e.key === 'Enter') {
+    mainKey = 'Return'; // Electron accelerator name for Enter
+  } else if (e.code.startsWith('Key')) {
     mainKey = e.code.replace('Key', '').toUpperCase();
   } else if (e.code.startsWith('Digit')) {
     mainKey = e.code.replace('Digit', '');
-  } else if (isFKey) {
+  } else if (/^F([1-9]|1[0-2])$/i.test(e.key)) {
     mainKey = e.key.toUpperCase();
   } else if (e.code === 'Space') {
     mainKey = 'Space';
@@ -551,11 +546,10 @@ pillLangEn.addEventListener('click', () => {
 btnSaveSettings.addEventListener('click', async (e) => {
   e.stopPropagation();
 
-  // 1. Apply language
   applyLanguage(selectedLangTemp);
   updateConversion();
 
-  // 2. Apply Custom Shortcut
+  // Apply Custom Shortcut (including 'Return' for Enter)
   const newShortcut = recordedShortcut;
   if (newShortcut !== currentShortcut && window.nihongoAPI && window.nihongoAPI.updateGlobalShortcut) {
     const success = await window.nihongoAPI.updateGlobalShortcut(newShortcut);
@@ -603,7 +597,6 @@ romajiInput.addEventListener('input', () => {
 
 // Keyboard navigation
 romajiInput.addEventListener('keydown', (e) => {
-  // If in settings recording mode, let recorder handler take over
   if (isRecordingShortcut) return;
 
   // Ctrl + T -> Toggle between Romaji and Translate modes!
@@ -648,7 +641,15 @@ cardKatakana.addEventListener('click', () => {
 // Shortcut toggle listener from Main
 if (window.nihongoAPI && window.nihongoAPI.onToggleExpand) {
   window.nihongoAPI.onToggleExpand((expanded) => {
-    setExpandedMode(expanded);
+    if (expanded) {
+      setExpandedMode(true);
+    } else {
+      if (currentHiragana && currentHiragana !== '-') {
+        copyAndFinish(currentHiragana);
+      } else {
+        requestCollapse();
+      }
+    }
   });
 }
 
