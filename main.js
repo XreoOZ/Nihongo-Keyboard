@@ -7,12 +7,13 @@ app.commandLine.appendSwitch('no-sandbox');
 
 let mainWindow = null;
 let isExpanded = false;
+let currentShortcut = 'Alt+J';
 
 // Dimensions
 const BUBBLE_WIDTH = 64;
 const BUBBLE_HEIGHT = 64;
-const EXPANDED_WIDTH = 400;
-const EXPANDED_HEIGHT = 175;
+const EXPANDED_WIDTH = 410;
+const EXPANDED_HEIGHT = 190;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -42,13 +43,39 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
 
-  // Ensure window stays visible across workspaces
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setAlwaysOnTop(true, 'screen-saver');
 
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+function registerShortcut(newShortcut) {
+  try {
+    if (currentShortcut && globalShortcut.isRegistered(currentShortcut)) {
+      globalShortcut.unregister(currentShortcut);
+    }
+
+    const registered = globalShortcut.register(newShortcut, () => {
+      toggleWindow();
+    });
+
+    if (registered) {
+      currentShortcut = newShortcut;
+      return true;
+    }
+
+    // Fallback if failed
+    if (newShortcut !== 'Alt+J') {
+      globalShortcut.register('Alt+J', () => toggleWindow());
+      currentShortcut = 'Alt+J';
+    }
+    return false;
+  } catch (err) {
+    console.error('Error registering global shortcut:', err);
+    return false;
+  }
 }
 
 function expandWindow() {
@@ -60,11 +87,9 @@ function expandWindow() {
   let newX = bounds.x;
   let newY = bounds.y;
 
-  // If expanding pushes window off-screen to the right, pull it left
   if (newX + EXPANDED_WIDTH > workX + workW) {
     newX = workX + workW - EXPANDED_WIDTH - 12;
   }
-  // If expanding pushes window off-screen to bottom, pull it up
   if (newY + EXPANDED_HEIGHT > workY + workH) {
     newY = workY + workH - EXPANDED_HEIGHT - 12;
   }
@@ -109,23 +134,12 @@ function toggleWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  // Register Global Hotkey (Alt + J)
-  const registered = globalShortcut.register('Alt+J', () => {
-    toggleWindow();
-  });
-
-  if (!registered) {
-    console.warn('Failed to register global shortcut Alt+J. Trying Ctrl+Shift+Space.');
-    globalShortcut.register('CommandOrControl+Shift+Space', () => {
-      toggleWindow();
-    });
-  }
+  registerShortcut(currentShortcut);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
-
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
@@ -160,6 +174,15 @@ ipcMain.handle('clipboard:copy', (_event, text) => {
     return true;
   }
   return false;
+});
+
+ipcMain.handle('shortcut:get', () => {
+  return currentShortcut;
+});
+
+ipcMain.handle('shortcut:update', (_event, newShortcut) => {
+  if (!newShortcut || typeof newShortcut !== 'string') return false;
+  return registerShortcut(newShortcut);
 });
 
 ipcMain.handle('app:quit', () => {

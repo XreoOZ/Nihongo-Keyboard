@@ -20,7 +20,9 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
   - Tekan `Shift + Enter` atau `Tab` $\rightarrow$ Salin **Katakana** ke clipboard.
   - Tekan `Esc` $\rightarrow$ Batalkan / ciutkan kembali ke bubble.
   - Klik kartu hasil $\rightarrow$ Salin hasil yang diklik.
-- **Global Shortcut:** Tekan `Alt + J` dari mana saja di Windows untuk langsung membuka/menutup keyboard.
+- **⚙️ Settings & Dukungan Multibahasa (EN / ID):**
+  - Ubah bahasa tampilan antarmuka antara **Bahasa Indonesia 🇮🇩** atau **English 🇬🇧**.
+  - Kustomisasi tombol **Global Shortcut** langsung dari menu Settings (`Alt + J`, `Ctrl + Shift + Space`, `Alt + K`, dll).
 
 ---
 
@@ -28,17 +30,18 @@ Aplikasi floating keyboard bahasa Jepang yang selalu melayang di atas semua jend
 
 ```text
 Nihongo Keyboard/
-├── main.js                 # Electron Main Process (Lifecycle, Window, Global Hotkey, AlwaysOnTop)
+├── main.js                 # Electron Main Process (Lifecycle, Window, Dynamic Global Hotkey, AlwaysOnTop)
 ├── preload.js              # Context Bridge aman antara Electron & Renderer
 ├── package.json            # Manifest & dependencies
 ├── README.md               # Dokumentasi project
 └── src/
-    ├── index.html          # Tampilan UI (Bubble & Expanded)
+    ├── index.html          # Tampilan UI (Bubble, Expanded Bar, & Settings Panel)
     ├── styles/
-    │   └── style.css       # Styling tema gelap modern bernuansa Jepang
+    │   └── style.css       # Desain Glassmorphism & efek modern
     └── scripts/
+        ├── i18n.js         # Modul kamus multibahasa (ID / EN)
         ├── converter.js    # Modul wrapper konversi Romaji -> Kana
-        ├── renderer.js     # Logika interaksi UI, event listener & keyboard shortcut
+        ├── renderer.js     # Logika interaksi UI, Settings, keyboard shortcut
         └── wanakana.min.js # Engine konversi WanaKana
 ```
 
@@ -50,7 +53,7 @@ Pastikan sudah berada di direktori project:
 ```bash
 npm start
 ```
-*(atau `npx electron .`)*
+*(atau double-click file `run.bat`)*
 
 ---
 
@@ -58,7 +61,13 @@ npm start
 
 | Shortcut | Aksi |
 | :--- | :--- |
-| **`Alt + J`** | Buka / Sembunyikan window dari aplikasi mana pun (*Global Hotkey*) |
+| **`Alt + J`** *(Bisa diubah di Settings)* | Buka / Sembunyikan window dari aplikasi mana pun (*Global Hotkey*) |
 | **`Enter`** | Salin hasil **Hiragana** ke clipboard & tutup ke bubble |
 | **`Shift + Enter`** / **`Tab`** | Salin hasil **Katakana** ke clipboard & tutup ke bubble |
 | **`Esc`** | Ciutkan kembali ke bubble tanpa menyalin |
+
+---
+
+## 📜 Lisensi
+
+Didistribusikan di bawah lisensi **GNU General Public License v3.0 (GPLv3)**. Lihat file `LICENSE` untuk informasi lebih lanjut.
