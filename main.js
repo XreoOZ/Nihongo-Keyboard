@@ -1,8 +1,10 @@
 const { app, BrowserWindow, ipcMain, clipboard, globalShortcut, screen } = require('electron');
 const path = require('path');
 
-// Disable GPU shader disk cache to avoid Windows file lock errors
+// Suppress internal Chromium/GPU driver noise & cache locks
 app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+app.commandLine.appendSwitch('disable-direct-composition-video-overlays');
+app.commandLine.appendSwitch('log-level', '3');
 app.commandLine.appendSwitch('no-sandbox');
 
 let mainWindow = null;
