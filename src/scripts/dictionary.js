@@ -1,5 +1,5 @@
 /**
- * Dictionary module: Offline database for common words + Jisho API online lookup
+ * Dictionary module: Offline database for common words + Jisho API online lookup + Translation
  */
 const NihongoDictionary = {
   // Common Japanese words cache & curated meanings (ID & EN)
@@ -17,6 +17,13 @@ const NihongoDictionary = {
       jlpt: 'N5',
       meaning_id: '1. Tuhan/Dewa (神)  2. Rambut (髪)  3. Kertas (紙)',
       meaning_en: '1. God/Deity (神)  2. Hair (髪)  3. Paper (紙)'
+    },
+    anata: {
+      kanji: '貴方',
+      reading: 'あなた',
+      jlpt: 'N5',
+      meaning_id: 'Kamu / Anda',
+      meaning_en: 'You'
     },
     arigatou: {
       kanji: '有難う',
@@ -52,13 +59,6 @@ const NihongoDictionary = {
       jlpt: 'N5',
       meaning_id: 'Saya / Aku',
       meaning_en: 'I, me'
-    },
-    anata: {
-      kanji: '貴方',
-      reading: 'あなた',
-      jlpt: 'N5',
-      meaning_id: 'Kamu / Anda',
-      meaning_en: 'You'
     },
     suki: {
       kanji: '好き',
@@ -186,55 +186,6 @@ const NihongoDictionary = {
       meaning_id: 'Hati / Jiwa / Pikiran',
       meaning_en: 'Heart, mind, spirit'
     },
-    hashi: {
-      kanji: '箸 / 橋 / 端',
-      reading: 'はし',
-      jlpt: 'N5',
-      meaning_id: '1. Sumpit (箸)  2. Jembatan (橋)  3. Ujung (端)',
-      meaning_en: '1. Chopsticks (箸)  2. Bridge (橋)  3. Edge (端)'
-    },
-    ame: {
-      kanji: '雨 / 飴',
-      reading: 'あめ',
-      jlpt: 'N5',
-      meaning_id: '1. Hujan (雨)  2. Permen (飴)',
-      meaning_en: '1. Rain (雨)  2. Candy / Sweets (飴)'
-    },
-    hana: {
-      kanji: '花 / 鼻',
-      reading: 'はな',
-      jlpt: 'N5',
-      meaning_id: '1. Bunga (花)  2. Hidung (鼻)',
-      meaning_en: '1. Flower (花)  2. Nose (鼻)'
-    },
-    mizu: {
-      kanji: '水',
-      reading: 'みず',
-      jlpt: 'N5',
-      meaning_id: 'Air',
-      meaning_en: 'Water (cold/fresh)'
-    },
-    ocha: {
-      kanji: 'お茶',
-      reading: 'おちゃ',
-      jlpt: 'N5',
-      meaning_id: 'Teh Jepang / Teh hijau',
-      meaning_en: 'Tea, green tea'
-    },
-    gohan: {
-      kanji: 'ご飯',
-      reading: 'ごはん',
-      jlpt: 'N5',
-      meaning_id: 'Nasi / Makanan',
-      meaning_en: 'Cooked rice, meal'
-    },
-    senshu: {
-      kanji: '先週 / 選手',
-      reading: 'せんしゅう',
-      jlpt: 'N5',
-      meaning_id: '1. Minggu lalu (先週)  2. Atlet / Pemain (選手)',
-      meaning_en: '1. Last week (先週)  2. Player / Athlete (選手)'
-    },
     ai: {
       kanji: '愛',
       reading: 'あい',
@@ -245,7 +196,7 @@ const NihongoDictionary = {
   },
 
   /**
-   * Search for word definition.
+   * Search for word definition in Romaji mode.
    * @param {string} romaji - Romaji query (e.g., 'kamu', 'kami')
    * @param {string} lang - 'id' or 'en'
    * @returns {Promise<{ kanji: string, reading: string, jlpt: string, meaning: string } | null>}
@@ -280,6 +231,46 @@ const NihongoDictionary = {
         }
       } catch (err) {
         console.warn('Online dictionary lookup failed:', err);
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * Translate non-Japanese (Indonesian / English) into Japanese.
+   * @param {string} text - e.g., 'kamu', 'terima kasih', 'makan'
+   * @returns {Promise<{ hiragana: string, katakana: string, kanji: string, romaji: string, meaning: string } | null>}
+   */
+  async translate(text) {
+    if (!text || typeof text !== 'string') return null;
+    const clean = text.toLowerCase().trim();
+    if (!clean) return null;
+
+    if (window.nihongoAPI && window.nihongoAPI.translateToJapanese) {
+      try {
+        const res = await window.nihongoAPI.translateToJapanese(clean);
+        if (res) {
+          const romaji = res.romaji || '';
+          let hiragana = res.hiragana;
+          let katakana = res.katakana;
+
+          // If not precomputed, compute using global wanakana
+          if (!hiragana && typeof wanakana !== 'undefined' && romaji) {
+            hiragana = wanakana.toHiragana(romaji);
+            katakana = wanakana.toKatakana(romaji);
+          }
+
+          return {
+            hiragana: hiragana || res.jaText || '-',
+            katakana: katakana || res.jaText || '-',
+            kanji: res.kanji || res.jaText || '',
+            romaji: romaji,
+            meaning: res.meaning || clean
+          };
+        }
+      } catch (err) {
+        console.warn('Translation failed:', err);
       }
     }
 

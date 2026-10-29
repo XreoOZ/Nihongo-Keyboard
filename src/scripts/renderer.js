@@ -14,6 +14,12 @@ const pillLangId = document.getElementById('pill-lang-id');
 const pillLangEn = document.getElementById('pill-lang-en');
 const lblShortcutTag = document.getElementById('lbl-shortcut-tag');
 
+// Mode Switcher Elements
+const tabModeRomaji = document.getElementById('tab-mode-romaji');
+const tabModeTranslate = document.getElementById('tab-mode-translate');
+const lblTabRomaji = document.getElementById('lbl-tab-romaji');
+const lblTabTranslate = document.getElementById('lbl-tab-translate');
+
 const romajiInput = document.getElementById('romaji-input');
 const btnClear = document.getElementById('btn-clear');
 const cardHiragana = document.getElementById('card-hiragana');
@@ -49,6 +55,29 @@ let toastTimeout = null;
 let searchDebounceTimeout = null;
 
 // ==========================================
+// Mode State: 'romaji' or 'translate'
+// ==========================================
+let currentMode = localStorage.getItem('nihongo_mode') || 'romaji';
+
+function setMode(mode) {
+  currentMode = mode;
+  localStorage.setItem('nihongo_mode', mode);
+
+  tabModeRomaji.classList.toggle('active', mode === 'romaji');
+  tabModeTranslate.classList.toggle('active', mode === 'translate');
+
+  const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+  if (romajiInput) {
+    romajiInput.placeholder = mode === 'romaji' ? dict.inputPlaceholderRomaji : dict.inputPlaceholderTranslate;
+  }
+
+  updateConversion();
+  setTimeout(() => {
+    romajiInput.focus();
+  }, 40);
+}
+
+// ==========================================
 // Settings & Localization (i18n) State
 // ==========================================
 let currentLang = localStorage.getItem('nihongo_lang') || 'id';
@@ -68,18 +97,23 @@ function applyLanguage(lang) {
   if (!dict) return;
 
   if (lblAppTitle) lblAppTitle.textContent = dict.appTitle;
-  if (romajiInput) romajiInput.placeholder = dict.inputPlaceholder;
+  if (lblTabRomaji) lblTabRomaji.textContent = dict.tabRomaji;
+  if (lblTabTranslate) lblTabTranslate.textContent = dict.tabTranslate;
+
+  if (romajiInput) {
+    romajiInput.placeholder = currentMode === 'romaji' ? dict.inputPlaceholderRomaji : dict.inputPlaceholderTranslate;
+  }
+
   if (lblTagHiragana) lblTagHiragana.textContent = dict.cardHiragana;
   if (lblTagKatakana) lblTagKatakana.textContent = dict.cardKatakana;
   if (lblHintHiragana) lblHintHiragana.textContent = dict.keyHintHiragana;
   if (lblHintKatakana) lblHintKatakana.textContent = dict.keyHintKatakana;
   if (lblStatusTip) lblStatusTip.innerHTML = dict.statusTip;
 
-  // Meaning card localization
   if (lblTagMeaning) lblTagMeaning.textContent = dict.cardMeaning;
   if (lblKanjiHint) lblKanjiHint.textContent = dict.kanjiCopyHint;
   if (!romajiInput.value.trim() && textMeaningDef) {
-    textMeaningDef.textContent = dict.meaningPlaceholder;
+    textMeaningDef.textContent = currentMode === 'romaji' ? dict.meaningPlaceholder : dict.meaningPlaceholderTranslate;
   }
 
   if (lblSettingsTitle) lblSettingsTitle.textContent = dict.settingsTitle;
@@ -98,7 +132,7 @@ function applyLanguage(lang) {
 }
 
 // ==========================================
-// Mode Switching
+// Mode Switching (Bubble <-> Expanded)
 // ==========================================
 function setExpandedMode(expanded) {
   if (expanded) {
@@ -207,14 +241,14 @@ function showToast(message) {
 }
 
 // ==========================================
-// Conversion & Dictionary Lookup Logic
+// Conversion & Translation Logic
 // ==========================================
 function resetMeaningCard() {
   const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
   currentKanji = '';
   wrapMeaningKanji.style.display = 'none';
   lblMeaningBadge.style.display = 'none';
-  textMeaningDef.textContent = dict.meaningPlaceholder;
+  textMeaningDef.textContent = currentMode === 'romaji' ? dict.meaningPlaceholder : dict.meaningPlaceholderTranslate;
 }
 
 function updateConversion() {
@@ -230,50 +264,89 @@ function updateConversion() {
     return;
   }
 
-  // 1. Instant Kana Conversion
-  const result = window.NihongoConverter ? window.NihongoConverter.convert(query) : { hiragana: query, katakana: query };
-  currentHiragana = result.hiragana;
-  currentKatakana = result.katakana;
+  const clean = query.trim().toLowerCase();
 
-  textHiragana.textContent = currentHiragana || '-';
-  textKatakana.textContent = currentKatakana || '-';
+  // ----------------------------------------------------
+  // MODE 1: ROMAJI -> KANA (Traditional Keyboard)
+  // ----------------------------------------------------
+  if (currentMode === 'romaji') {
+    const result = window.NihongoConverter ? window.NihongoConverter.convert(query) : { hiragana: query, katakana: query };
+    currentHiragana = result.hiragana;
+    currentKatakana = result.katakana;
 
-  // 2. Debounced Meaning & Kanji Lookup (Poin 2)
-  if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
-  searchDebounceTimeout = setTimeout(async () => {
-    const cleanWord = query.trim().toLowerCase();
-    if (!cleanWord) return;
+    textHiragana.textContent = currentHiragana || '-';
+    textKatakana.textContent = currentKatakana || '-';
 
-    if (window.NihongoDictionary) {
-      const match = await window.NihongoDictionary.search(cleanWord, currentLang);
-      if (match) {
-        // Kanji display
-        if (match.kanji && match.kanji !== '-') {
-          currentKanji = match.kanji;
-          textMeaningKanji.textContent = match.kanji;
-          wrapMeaningKanji.style.display = 'inline-flex';
+    if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(async () => {
+      if (window.NihongoDictionary) {
+        const match = await window.NihongoDictionary.search(clean, currentLang);
+        if (match) {
+          if (match.kanji && match.kanji !== '-') {
+            currentKanji = match.kanji;
+            textMeaningKanji.textContent = match.kanji;
+            wrapMeaningKanji.style.display = 'inline-flex';
+          } else {
+            wrapMeaningKanji.style.display = 'none';
+          }
+
+          if (match.jlpt) {
+            lblMeaningBadge.textContent = match.jlpt.startsWith('JLPT') ? match.jlpt : `JLPT ${match.jlpt}`;
+            lblMeaningBadge.style.display = 'inline-block';
+          } else {
+            lblMeaningBadge.style.display = 'none';
+          }
+
+          textMeaningDef.textContent = match.meaning || '-';
         } else {
+          const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
           wrapMeaningKanji.style.display = 'none';
-        }
-
-        // JLPT badge
-        if (match.jlpt) {
-          lblMeaningBadge.textContent = match.jlpt.startsWith('JLPT') ? match.jlpt : `JLPT ${match.jlpt}`;
-          lblMeaningBadge.style.display = 'inline-block';
-        } else {
           lblMeaningBadge.style.display = 'none';
+          textMeaningDef.textContent = dict.meaningNotFound;
         }
-
-        // Definition text
-        textMeaningDef.textContent = match.meaning || '-';
-      } else {
-        const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
-        wrapMeaningKanji.style.display = 'none';
-        lblMeaningBadge.style.display = 'none';
-        textMeaningDef.textContent = dict.meaningNotFound;
       }
-    }
-  }, 220);
+    }, 220);
+  }
+
+  // ----------------------------------------------------
+  // MODE 2: TRANSLATE (ID / EN -> Japanese: e.g. "Kamu" -> "Anata")
+  // ----------------------------------------------------
+  else if (currentMode === 'translate') {
+    const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+    textMeaningDef.textContent = dict.meaningLoading;
+
+    if (searchDebounceTimeout) clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(async () => {
+      if (window.NihongoDictionary) {
+        const trans = await window.NihongoDictionary.translate(clean);
+        if (trans) {
+          currentHiragana = trans.hiragana;
+          currentKatakana = trans.katakana;
+          currentKanji = trans.kanji;
+
+          textHiragana.textContent = currentHiragana || '-';
+          textKatakana.textContent = currentKatakana || '-';
+
+          if (trans.kanji && trans.kanji !== '-') {
+            textMeaningKanji.textContent = trans.kanji;
+            wrapMeaningKanji.style.display = 'inline-flex';
+          } else {
+            wrapMeaningKanji.style.display = 'none';
+          }
+
+          lblMeaningBadge.style.display = 'none';
+
+          const romajiBadge = trans.romaji ? `${trans.romaji.toUpperCase()} • ` : '';
+          textMeaningDef.textContent = `${romajiBadge}${trans.meaning || clean}`;
+        } else {
+          textHiragana.textContent = '-';
+          textKatakana.textContent = '-';
+          wrapMeaningKanji.style.display = 'none';
+          textMeaningDef.textContent = dict.meaningNotFound;
+        }
+      }
+    }, 200);
+  }
 }
 
 // ==========================================
@@ -301,11 +374,14 @@ async function copyAndFinish(text) {
 // Event Listeners
 // ==========================================
 
+// Mode Tabs Click
+tabModeRomaji.addEventListener('click', () => setMode('romaji'));
+tabModeTranslate.addEventListener('click', () => setMode('translate'));
+
 // Click Kanji badge to copy
 wrapMeaningKanji.addEventListener('click', (e) => {
   e.stopPropagation();
   if (currentKanji) {
-    // If multiple kanji like "神 / 髪 / 紙", copy first or full
     const primaryKanji = currentKanji.split('/')[0].trim();
     copyAndFinish(primaryKanji);
   }
@@ -348,11 +424,9 @@ pillLangEn.addEventListener('click', () => {
 btnSaveSettings.addEventListener('click', async (e) => {
   e.stopPropagation();
 
-  // 1. Apply language
   applyLanguage(selectedLangTemp);
-  updateConversion(); // Refresh meaning in selected language
+  updateConversion();
 
-  // 2. Apply Shortcut
   const newShortcut = selectShortcut.value;
   if (newShortcut !== currentShortcut && window.nihongoAPI && window.nihongoAPI.updateGlobalShortcut) {
     const success = await window.nihongoAPI.updateGlobalShortcut(newShortcut);
@@ -400,6 +474,13 @@ romajiInput.addEventListener('input', () => {
 
 // Keyboard navigation
 romajiInput.addEventListener('keydown', (e) => {
+  // Ctrl + T -> Toggle between Romaji and Translate modes!
+  if (e.ctrlKey && e.key.toLowerCase() === 't') {
+    e.preventDefault();
+    setMode(currentMode === 'romaji' ? 'translate' : 'romaji');
+    return;
+  }
+
   if (e.key === 'Escape') {
     e.preventDefault();
     requestCollapse();
@@ -408,7 +489,7 @@ romajiInput.addEventListener('keydown', (e) => {
 
   if (e.key === 'Tab') {
     e.preventDefault();
-    if (currentKatakana) {
+    if (currentKatakana && currentKatakana !== '-') {
       copyAndFinish(currentKatakana);
     }
     return;
@@ -417,19 +498,19 @@ romajiInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
     if (e.shiftKey) {
-      if (currentKatakana) copyAndFinish(currentKatakana);
+      if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
     } else {
-      if (currentHiragana) copyAndFinish(currentHiragana);
+      if (currentHiragana && currentHiragana !== '-') copyAndFinish(currentHiragana);
     }
   }
 });
 
 cardHiragana.addEventListener('click', () => {
-  if (currentHiragana) copyAndFinish(currentHiragana);
+  if (currentHiragana && currentHiragana !== '-') copyAndFinish(currentHiragana);
 });
 
 cardKatakana.addEventListener('click', () => {
-  if (currentKatakana) copyAndFinish(currentKatakana);
+  if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
 });
 
 // Shortcut toggle listener from Main
@@ -442,6 +523,7 @@ if (window.nihongoAPI && window.nihongoAPI.onToggleExpand) {
 // Initial initialization
 (async function init() {
   applyLanguage(currentLang);
+  setMode(currentMode);
 
   if (window.nihongoAPI && window.nihongoAPI.getGlobalShortcut) {
     const activeShortcut = await window.nihongoAPI.getGlobalShortcut();

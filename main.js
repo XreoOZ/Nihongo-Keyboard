@@ -11,18 +11,51 @@ let mainWindow = null;
 let isExpanded = false;
 let currentShortcut = 'Alt+J';
 const dictionaryCache = new Map();
+const translationCache = new Map();
+
+// Helper to normalize macron vowels from romanization
+function normalizeMacrons(str) {
+  if (!str) return '';
+  return str
+    .replace(/[āĀ]/g, 'aa')
+    .replace(/[īĪ]/g, 'ii')
+    .replace(/[ūŪ]/g, 'uu')
+    .replace(/[ēĒ]/g, 'ee')
+    .replace(/[ōŌ]/g, 'ou');
+}
+
+// Curated local translation dictionary for instant offline responses
+const localTranslationMap = {
+  kamu: { romaji: 'anata', hiragana: 'あなた', katakana: 'アナタ', kanji: '貴方', meaning: 'Kamu / Anda (You)' },
+  anda: { romaji: 'anata', hiragana: 'あなた', katakana: 'アナタ', kanji: '貴方', meaning: 'Anda / Kamu (You)' },
+  you: { romaji: 'anata', hiragana: 'あなた', katakana: 'アナタ', kanji: '貴方', meaning: 'You (Kamu / Anda)' },
+  saya: { romaji: 'watashi', hiragana: 'わたし', katakana: 'ワタシ', kanji: '私', meaning: 'Saya / Aku (I, me)' },
+  aku: { romaji: 'watashi', hiragana: 'わたし', katakana: 'ワタシ', kanji: '私', meaning: 'Aku / Saya (I, me)' },
+  i: { romaji: 'watashi', hiragana: 'わたし', katakana: 'ワタシ', kanji: '私', meaning: 'I / Me (Saya / Aku)' },
+  'terima kasih': { romaji: 'arigatou', hiragana: 'ありがとう', katakana: 'アリガトウ', kanji: '有難う', meaning: 'Terima kasih (Thank you)' },
+  makasih: { romaji: 'arigatou', hiragana: 'ありがとう', katakana: 'アリガトウ', kanji: '有難う', meaning: 'Terima kasih (Thank you)' },
+  'thank you': { romaji: 'arigatou', hiragana: 'ありがとう', katakana: 'アリガトウ', kanji: '有難う', meaning: 'Thank you (Terima kasih)' },
+  thanks: { romaji: 'arigatou', hiragana: 'ありがとう', katakana: 'アリガトウ', kanji: '有難う', meaning: 'Thanks (Terima kasih)' },
+  makan: { romaji: 'taberu', hiragana: 'たべる', katakana: 'タベル', kanji: '食べる', meaning: 'Makan (To eat)' },
+  eat: { romaji: 'taberu', hiragana: 'たべる', katakana: 'タベル', kanji: '食べる', meaning: 'To eat (Makan)' },
+  minum: { romaji: 'nomu', hiragana: 'のむ', katakana: 'ノム', kanji: '飲む', meaning: 'Minum (To drink)' },
+  drink: { romaji: 'nomu', hiragana: 'のむ', katakana: 'ノム', kanji: '飲む', meaning: 'To drink (Minum)' },
+  cinta: { romaji: 'ai', hiragana: 'あい', katakana: 'アイ', kanji: '愛', meaning: 'Cinta / Kasih sayang (Love)' },
+  love: { romaji: 'ai', hiragana: 'あい', katakana: 'アイ', kanji: '愛', meaning: 'Love (Cinta)' },
+  kucing: { romaji: 'neko', hiragana: 'ねこ', katakana: 'ネコ', kanji: '猫', meaning: 'Kucing (Cat)' },
+  cat: { romaji: 'neko', hiragana: 'ねこ', katakana: 'ネコ', kanji: '猫', meaning: 'Cat (Kucing)' }
+};
 
 // Dimensions
 const BUBBLE_WIDTH = 64;
 const BUBBLE_HEIGHT = 64;
 const EXPANDED_WIDTH = 420;
-const EXPANDED_HEIGHT = 250;
+const EXPANDED_HEIGHT = 285;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-  // Initial position: Top-Right of the screen with margin
   const initialX = Math.round(screenWidth - BUBBLE_WIDTH - 28);
   const initialY = Math.round(screenHeight * 0.18);
 
@@ -224,6 +257,61 @@ ipcMain.handle('dictionary:lookup', async (_event, keyword) => {
     return result;
   } catch (err) {
     console.error('Dictionary API lookup error:', err.message);
+    return null;
+  }
+});
+
+// Translation to Japanese API (supports Indonesian, English, etc.)
+ipcMain.handle('translate:to-japanese', async (_event, text) => {
+  if (!text || typeof text !== 'string') return null;
+  const clean = text.toLowerCase().trim();
+  if (!clean) return null;
+
+  // 1. Check local translation cache or curated map
+  if (localTranslationMap[clean]) {
+    return localTranslationMap[clean];
+  }
+  if (translationCache.has(clean)) {
+    return translationCache.get(clean);
+  }
+
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&dt=rm&q=${encodeURIComponent(clean)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || !data[0] || !data[0][0]) return null;
+
+    const jaText = data[0][0][0] || '';
+    const rawRomaji = data[0][1] ? data[0][1][2] : '';
+    const romaji = normalizeMacrons(rawRomaji).toLowerCase().trim();
+
+    // Check if jaText is purely Kana or has Kanji
+    const hasKanji = /[\u4e00-\u9faf]/.test(jaText);
+
+    // If word is "kamu", special case for kanji "貴方"
+    let kanji = hasKanji ? jaText : '';
+    if (clean === 'kamu' || clean === 'anda' || clean === 'you') {
+      kanji = '貴方';
+    }
+
+    const result = {
+      original: clean,
+      jaText,
+      romaji: romaji || clean,
+      kanji: kanji || jaText,
+      meaning: `${clean.charAt(0).toUpperCase() + clean.slice(1)}`
+    };
+
+    translationCache.set(clean, result);
+    return result;
+  } catch (err) {
+    console.error('Translate API error:', err.message);
     return null;
   }
 });

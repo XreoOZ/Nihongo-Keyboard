@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('nihongoAPI', {
   updateGlobalShortcut: (shortcut) => ipcRenderer.invoke('shortcut:update', shortcut),
   getGlobalShortcut: () => ipcRenderer.invoke('shortcut:get'),
   lookupWord: (word) => ipcRenderer.invoke('dictionary:lookup', word),
+  translateToJapanese: (text) => ipcRenderer.invoke('translate:to-japanese', text),
   onToggleExpand: (callback) => {
     ipcRenderer.on('action:toggle-expand', (_event, expanded) => callback(expanded));
   }

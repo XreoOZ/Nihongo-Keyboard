@@ -60,6 +60,17 @@
 
       <!-- Main Input & Conversion Content -->
       <div id="main-content" class="content-panel">
+        
+        <!-- Mode Switcher Tabs (Romaji vs Translate) -->
+        <div class="mode-tabs">
+          <button type="button" class="mode-tab active" id="tab-mode-romaji" data-mode="romaji">
+            <span id="lbl-tab-romaji">🔤 Romaji Mode</span>
+          </button>
+          <button type="button" class="mode-tab" id="tab-mode-translate" data-mode="translate">
+            <span id="lbl-tab-translate">🌐 Terjemahan (ID/EN)</span>
+          </button>
+        </div>
+
         <div class="input-section">
           <div class="input-wrapper">
             <input 
@@ -97,7 +108,7 @@
           </div>
         </div>
 
-        <!-- Meaning / Dictionary Card (Poin 2) -->
+        <!-- Meaning / Dictionary Card -->
         <div class="meaning-card" id="card-meaning">
           <div class="meaning-header">
             <div class="meaning-title-wrap">
@@ -117,7 +128,7 @@
 
         <!-- Status Tip -->
         <div class="status-bar">
-          <span class="status-tip" id="lbl-status-tip">💡 <strong>Enter</strong> = Hiragana | <strong>Shift+Enter</strong> = Katakana | <strong>Esc</strong> = Tutup</span>
+          <span class="status-tip" id="lbl-status-tip">💡 <strong>Enter</strong> = Hiragana | <strong>Shift+Enter</strong> = Katakana | <strong>Ctrl+T</strong> = Ganti Mode</span>
         </div>
       </div>
 
