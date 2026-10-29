@@ -32,13 +32,18 @@ const I18N = {
     // Settings panel strings
     settingsTitle: 'Pengaturan',
     langLabel: 'Bahasa Tampilan',
-    shortcutLabel: 'Shortcut Global',
+    shortcutLabel: 'Buka / Tutup Bar (Global)',
+    sectionCopyShortcuts: 'Shortcut Salin Keyboard',
+    shortcutCopyHira: 'Salin Hiragana',
+    shortcutCopyKata: 'Salin Katakana',
+    shortcutCopyKanji: 'Salin Kanji / Makna',
     shortcutHelp: 'Klik tombol di bawah lalu tekan kombinasi shortcut apa pun yang kamu mau di keyboard.',
     shortcutRecording: '🔴 Tekan tombol di keyboard...',
-    shortcutRecordHint: 'Klik untuk ubah',
-    shortcutResetTitle: 'Kembalikan ke default (Alt + J)',
+    shortcutRecordHint: 'Klik ubah',
+    shortcutResetTitle: 'Kembalikan ke default',
     btnSave: 'Simpan',
-    btnCancel: 'Batal'
+    btnCancel: 'Batal',
+    toastLetterAutoCombo: '💡 Tombol {key} otomatis dipasangkan dengan Ctrl ({combo}) agar tidak bentrok saat mengetik kata!'
   },
   en: {
     appTitle: 'Nihongo Keyboard',
@@ -70,13 +75,18 @@ const I18N = {
     // Settings panel strings
     settingsTitle: 'Settings',
     langLabel: 'Display Language',
-    shortcutLabel: 'Global Shortcut',
+    shortcutLabel: 'Open / Close Bar (Global)',
+    sectionCopyShortcuts: 'Keyboard Copy Shortcuts',
+    shortcutCopyHira: 'Copy Hiragana',
+    shortcutCopyKata: 'Copy Katakana',
+    shortcutCopyKanji: 'Copy Kanji / Meaning',
     shortcutHelp: 'Click the button below and press any key combination on your keyboard.',
     shortcutRecording: '🔴 Press keys on keyboard...',
     shortcutRecordHint: 'Click to record',
-    shortcutResetTitle: 'Reset to default (Alt + J)',
+    shortcutResetTitle: 'Reset to default',
     btnSave: 'Save',
-    btnCancel: 'Cancel'
+    btnCancel: 'Cancel',
+    toastLetterAutoCombo: '💡 Letter key {key} is paired with Ctrl ({combo}) so it does not conflict while typing!'
   }
 };
 

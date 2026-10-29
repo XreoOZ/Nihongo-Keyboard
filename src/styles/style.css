@@ -512,20 +512,20 @@ html, body {
    ========================================================= */
 .settings-panel {
   position: absolute;
-  top: 36px;
-  left: 10px;
-  right: 10px;
-  bottom: 8px;
+  top: 34px;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
   background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   z-index: 10;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .settings-hidden {
@@ -553,8 +553,37 @@ html, body {
 .settings-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 6px 0;
+  gap: 6px;
+  margin: 4px 0;
+  overflow-y: auto;
+  max-height: 235px;
+  padding-right: 4px;
+}
+
+.settings-body::-webkit-scrollbar {
+  width: 4px;
+}
+.settings-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+.settings-body::-webkit-scrollbar-thumb {
+  background: rgba(244, 63, 94, 0.35);
+  border-radius: 2px;
+}
+.settings-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 63, 94, 0.65);
+}
+
+.settings-section-divider {
+  font-size: 9px;
+  font-weight: 700;
+  color: #f43f5e;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .setting-item {
@@ -643,7 +672,10 @@ html, body {
   100% { box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.3); }
 }
 
-#txt-record-shortcut {
+#txt-record-shortcut,
+#txt-record-hira,
+#txt-record-kata,
+#txt-record-kanji {
   font-size: 11px;
   font-weight: 700;
   color: #f8fafc;

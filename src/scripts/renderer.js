@@ -13,11 +13,31 @@ const pillLangId = document.getElementById('pill-lang-id');
 const pillLangEn = document.getElementById('pill-lang-en');
 const lblShortcutTag = document.getElementById('lbl-shortcut-tag');
 
-// Custom Shortcut Recorder Elements
+// Custom Shortcut Recorder Elements (Global & In-App Copy)
 const btnRecordShortcut = document.getElementById('btn-record-shortcut');
 const txtRecordShortcut = document.getElementById('txt-record-shortcut');
 const lblRecordBadge = document.getElementById('lbl-record-badge');
 const btnResetShortcut = document.getElementById('btn-reset-shortcut');
+
+const btnRecordHira = document.getElementById('btn-record-hira');
+const txtRecordHira = document.getElementById('txt-record-hira');
+const lblRecordBadgeHira = document.getElementById('lbl-record-badge-hira');
+const btnResetHira = document.getElementById('btn-reset-hira');
+
+const btnRecordKata = document.getElementById('btn-record-kata');
+const txtRecordKata = document.getElementById('txt-record-kata');
+const lblRecordBadgeKata = document.getElementById('lbl-record-badge-kata');
+const btnResetKata = document.getElementById('btn-reset-kata');
+
+const btnRecordKanji = document.getElementById('btn-record-kanji');
+const txtRecordKanji = document.getElementById('txt-record-kanji');
+const lblRecordBadgeKanji = document.getElementById('lbl-record-badge-kanji');
+const btnResetKanji = document.getElementById('btn-reset-kanji');
+
+const lblSectionCopy = document.getElementById('lbl-section-copy');
+const lblSettingCopyHira = document.getElementById('lbl-setting-copy-hira');
+const lblSettingCopyKata = document.getElementById('lbl-setting-copy-kata');
+const lblSettingCopyKanji = document.getElementById('lbl-setting-copy-kanji');
 
 // Mode Switcher Elements
 const tabModeRomaji = document.getElementById('tab-mode-romaji');
@@ -87,20 +107,93 @@ function setMode(mode) {
 // ==========================================
 let currentLang = localStorage.getItem('nihongo_lang') || 'id';
 let currentShortcut = localStorage.getItem('nihongo_shortcut') || 'Alt+J';
+let currentShortcutHiragana = localStorage.getItem('nihongo_shortcut_hiragana') || 'Return';
+let currentShortcutKatakana = localStorage.getItem('nihongo_shortcut_katakana') || 'Shift+Return';
+let currentShortcutKanji = localStorage.getItem('nihongo_shortcut_kanji') || 'CommandOrControl+Return';
+
+// Temporary state while settings panel is open
 let recordedShortcut = currentShortcut;
-let isRecordingShortcut = false;
+let recordedShortcutHira = currentShortcutHiragana;
+let recordedShortcutKata = currentShortcutKatakana;
+let recordedShortcutKanji = currentShortcutKanji;
+
+// activeRecordingTarget: null | 'global' | 'hiragana' | 'katakana' | 'kanji'
+let activeRecordingTarget = null;
 let selectedLangTemp = currentLang;
 
+function normalizeShortcut(str) {
+  if (!str) return '';
+  return str
+    .replace(/CommandOrControl/gi, 'Ctrl')
+    .replace(/Control/gi, 'Ctrl')
+    .replace(/Return/gi, 'Enter')
+    .replace(/\s+/g, '');
+}
+
+function matchesKeyboardEvent(e, shortcutStr) {
+  if (!shortcutStr) return false;
+  const parts = normalizeShortcut(shortcutStr).split('+');
+  const needsCtrl = parts.some(p => /^ctrl$/i.test(p));
+  const needsAlt = parts.some(p => /^alt$/i.test(p));
+  const needsShift = parts.some(p => /^shift$/i.test(p));
+  const mainKey = parts.find(p => !/^(ctrl|alt|shift|meta|super)$/i.test(p)) || '';
+
+  if (!!e.ctrlKey !== needsCtrl) return false;
+  if (!!e.altKey !== needsAlt) return false;
+  if (!!e.shiftKey !== needsShift) return false;
+
+  const k = e.key ? e.key.toUpperCase() : '';
+  const c = e.code ? e.code.toUpperCase() : '';
+  const target = mainKey.toUpperCase();
+
+  if (target === 'ENTER' || target === 'RETURN') {
+    return k === 'ENTER';
+  }
+  if (target === 'TAB') {
+    return k === 'TAB';
+  }
+  if (target === 'SPACE') {
+    return k === ' ' || c === 'SPACE';
+  }
+  if (/^F([1-9]|1[0-2])$/i.test(target)) {
+    return k === target;
+  }
+  if (c === 'KEY' + target || c === 'DIGIT' + target || k === target) {
+    return true;
+  }
+  return false;
+}
+
 function formatShortcutLabel(shortcut) {
-  if (!shortcut) return 'Alt + J';
-  if (shortcut === 'Return') return 'Enter';
+  if (!shortcut) return '-';
   return shortcut
-    .replace(/CommandOrControl/g, 'Ctrl')
-    .replace(/Command/g, 'Cmd')
-    .replace(/Control/g, 'Ctrl')
-    .replace(/Super/g, 'Win')
-    .replace(/Return/g, 'Enter')
+    .replace(/CommandOrControl/gi, 'Ctrl')
+    .replace(/Control/gi, 'Ctrl')
+    .replace(/Return/gi, 'Enter')
+    .replace(/Super/gi, 'Win')
     .replace(/\+/g, ' + ');
+}
+
+function updateShortcutHints() {
+  const hiraLabel = formatShortcutLabel(currentShortcutHiragana);
+  const kataLabel = formatShortcutLabel(currentShortcutKatakana);
+  const kanjiLabel = formatShortcutLabel(currentShortcutKanji);
+
+  const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+
+  if (lblHintHiragana) {
+    lblHintHiragana.textContent = hiraLabel === 'Enter' ? 'Enter ↵' : hiraLabel;
+  }
+  if (lblHintKatakana) {
+    lblHintKatakana.textContent = kataLabel === 'Shift + Enter' ? 'Shift+Enter ⇧↵' : kataLabel;
+  }
+  if (lblKanjiHint) {
+    lblKanjiHint.textContent = `${kanjiLabel} / ${dict.kanjiCopyHint || 'salin'}`;
+  }
+
+  if (lblStatusTip) {
+    lblStatusTip.innerHTML = `💡 <strong>${hiraLabel}</strong> = Hiragana | <strong>${kataLabel}</strong> = Katakana | <strong>${kanjiLabel}</strong> = Kanji | <strong>Ctrl+T</strong> = Mode`;
+  }
 }
 
 function applyLanguage(lang) {
@@ -120,12 +213,8 @@ function applyLanguage(lang) {
 
   if (lblTagHiragana) lblTagHiragana.textContent = dict.cardHiragana;
   if (lblTagKatakana) lblTagKatakana.textContent = dict.cardKatakana;
-  if (lblHintHiragana) lblHintHiragana.textContent = dict.keyHintHiragana;
-  if (lblHintKatakana) lblHintKatakana.textContent = dict.keyHintKatakana;
-  if (lblStatusTip) lblStatusTip.innerHTML = dict.statusTip;
-
   if (lblTagMeaning) lblTagMeaning.textContent = dict.cardMeaning;
-  if (lblKanjiHint) lblKanjiHint.textContent = dict.kanjiCopyHint;
+
   if (!romajiInput.value.trim() && textMeaningDef) {
     textMeaningDef.textContent = currentMode === 'romaji' ? dict.meaningPlaceholder : dict.meaningPlaceholderTranslate;
   }
@@ -133,13 +222,25 @@ function applyLanguage(lang) {
   if (lblSettingsTitle) lblSettingsTitle.textContent = dict.settingsTitle;
   if (lblSettingLang) lblSettingLang.textContent = dict.langLabel;
   if (lblSettingShortcut) lblSettingShortcut.textContent = dict.shortcutLabel;
+  if (lblSectionCopy) lblSectionCopy.textContent = dict.sectionCopyShortcuts;
+  if (lblSettingCopyHira) lblSettingCopyHira.textContent = dict.shortcutCopyHira;
+  if (lblSettingCopyKata) lblSettingCopyKata.textContent = dict.shortcutCopyKata;
+  if (lblSettingCopyKanji) lblSettingCopyKanji.textContent = dict.shortcutCopyKanji;
+
   if (btnCancelSettings) btnCancelSettings.textContent = dict.btnCancel;
   if (btnSaveSettings) btnSaveSettings.textContent = dict.btnSave;
 
-  if (btnRecordShortcut && !isRecordingShortcut) {
-    lblRecordBadge.textContent = dict.shortcutRecordHint;
+  if (!activeRecordingTarget) {
+    if (lblRecordBadge) lblRecordBadge.textContent = dict.shortcutRecordHint;
+    if (lblRecordBadgeHira) lblRecordBadgeHira.textContent = dict.shortcutRecordHint;
+    if (lblRecordBadgeKata) lblRecordBadgeKata.textContent = dict.shortcutRecordHint;
+    if (lblRecordBadgeKanji) lblRecordBadgeKanji.textContent = dict.shortcutRecordHint;
   }
+
   if (btnResetShortcut) btnResetShortcut.title = dict.shortcutResetTitle;
+  if (btnResetHira) btnResetHira.title = dict.shortcutResetTitle;
+  if (btnResetKata) btnResetKata.title = dict.shortcutResetTitle;
+  if (btnResetKanji) btnResetKanji.title = dict.shortcutResetTitle;
 
   if (btnSettings) btnSettings.title = dict.settingsBtnTitle;
   if (btnMinimize) btnMinimize.title = dict.minimizeBtnTitle;
@@ -148,6 +249,8 @@ function applyLanguage(lang) {
 
   pillLangId.classList.toggle('active', selectedLangTemp === 'id');
   pillLangEn.classList.toggle('active', selectedLangTemp === 'en');
+
+  updateShortcutHints();
 }
 
 // ==========================================
@@ -188,13 +291,23 @@ function requestCollapse() {
 function openSettings() {
   selectedLangTemp = currentLang;
   recordedShortcut = currentShortcut;
-  isRecordingShortcut = false;
+  recordedShortcutHira = currentShortcutHiragana;
+  recordedShortcutKata = currentShortcutKatakana;
+  recordedShortcutKanji = currentShortcutKanji;
 
-  btnRecordShortcut.classList.remove('recording');
-  txtRecordShortcut.textContent = formatShortcutLabel(recordedShortcut);
+  activeRecordingTarget = null;
+  [btnRecordShortcut, btnRecordHira, btnRecordKata, btnRecordKanji].forEach(b => b?.classList.remove('recording'));
+
+  if (txtRecordShortcut) txtRecordShortcut.textContent = formatShortcutLabel(recordedShortcut);
+  if (txtRecordHira) txtRecordHira.textContent = formatShortcutLabel(recordedShortcutHira);
+  if (txtRecordKata) txtRecordKata.textContent = formatShortcutLabel(recordedShortcutKata);
+  if (txtRecordKanji) txtRecordKanji.textContent = formatShortcutLabel(recordedShortcutKanji);
 
   const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
-  lblRecordBadge.textContent = dict.shortcutRecordHint;
+  if (lblRecordBadge) lblRecordBadge.textContent = dict.shortcutRecordHint;
+  if (lblRecordBadgeHira) lblRecordBadgeHira.textContent = dict.shortcutRecordHint;
+  if (lblRecordBadgeKata) lblRecordBadgeKata.textContent = dict.shortcutRecordHint;
+  if (lblRecordBadgeKanji) lblRecordBadgeKanji.textContent = dict.shortcutRecordHint;
 
   pillLangId.classList.toggle('active', selectedLangTemp === 'id');
   pillLangEn.classList.toggle('active', selectedLangTemp === 'en');
@@ -203,38 +316,73 @@ function openSettings() {
 }
 
 function closeSettings() {
-  stopRecordingShortcut();
+  stopRecording();
   settingsPanel.classList.add('settings-hidden');
   setTimeout(() => {
     romajiInput.focus();
   }, 50);
 }
 
-function startRecordingShortcut() {
+function startRecording(target) {
   const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
-  isRecordingShortcut = true;
-  btnRecordShortcut.classList.add('recording');
-  txtRecordShortcut.textContent = dict.shortcutRecording;
-  lblRecordBadge.textContent = '...';
+  activeRecordingTarget = target;
+
+  [btnRecordShortcut, btnRecordHira, btnRecordKata, btnRecordKanji].forEach(b => b?.classList.remove('recording'));
+
+  let activeBtn, activeTxt, activeBadge;
+  if (target === 'global') {
+    activeBtn = btnRecordShortcut;
+    activeTxt = txtRecordShortcut;
+    activeBadge = lblRecordBadge;
+  } else if (target === 'hiragana') {
+    activeBtn = btnRecordHira;
+    activeTxt = txtRecordHira;
+    activeBadge = lblRecordBadgeHira;
+  } else if (target === 'katakana') {
+    activeBtn = btnRecordKata;
+    activeTxt = txtRecordKata;
+    activeBadge = lblRecordBadgeKata;
+  } else if (target === 'kanji') {
+    activeBtn = btnRecordKanji;
+    activeTxt = txtRecordKanji;
+    activeBadge = lblRecordBadgeKanji;
+  }
+
+  if (activeBtn) {
+    activeBtn.classList.add('recording');
+    activeTxt.textContent = dict.shortcutRecording;
+    activeBadge.textContent = '...';
+  }
 }
 
-function stopRecordingShortcut() {
+function stopRecording() {
   const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
-  isRecordingShortcut = false;
-  btnRecordShortcut.classList.remove('recording');
-  txtRecordShortcut.textContent = formatShortcutLabel(recordedShortcut);
-  lblRecordBadge.textContent = dict.shortcutRecordHint;
+  activeRecordingTarget = null;
+
+  [btnRecordShortcut, btnRecordHira, btnRecordKata, btnRecordKanji].forEach(b => b?.classList.remove('recording'));
+
+  if (txtRecordShortcut) txtRecordShortcut.textContent = formatShortcutLabel(recordedShortcut);
+  if (lblRecordBadge) lblRecordBadge.textContent = dict.shortcutRecordHint;
+
+  if (txtRecordHira) txtRecordHira.textContent = formatShortcutLabel(recordedShortcutHira);
+  if (lblRecordBadgeHira) lblRecordBadgeHira.textContent = dict.shortcutRecordHint;
+
+  if (txtRecordKata) txtRecordKata.textContent = formatShortcutLabel(recordedShortcutKata);
+  if (lblRecordBadgeKata) lblRecordBadgeKata.textContent = dict.shortcutRecordHint;
+
+  if (txtRecordKanji) txtRecordKanji.textContent = formatShortcutLabel(recordedShortcutKanji);
+  if (lblRecordBadgeKanji) lblRecordBadgeKanji.textContent = dict.shortcutRecordHint;
 }
 
 // Global key listener for recording shortcuts
 window.addEventListener('keydown', (e) => {
-  if (!isRecordingShortcut) return;
+  if (!activeRecordingTarget) return;
 
   e.preventDefault();
   e.stopPropagation();
 
   if (e.key === 'Escape') {
-    stopRecordingShortcut();
+    stopRecording();
     return;
   }
 
@@ -244,7 +392,12 @@ window.addEventListener('keydown', (e) => {
     if (e.altKey) parts.push('Alt');
     if (e.shiftKey) parts.push('Shift');
     if (e.metaKey) parts.push('Win');
-    txtRecordShortcut.textContent = parts.join(' + ') + ' + ...';
+    const display = parts.join(' + ') + ' + ...';
+
+    if (activeRecordingTarget === 'global' && txtRecordShortcut) txtRecordShortcut.textContent = display;
+    if (activeRecordingTarget === 'hiragana' && txtRecordHira) txtRecordHira.textContent = display;
+    if (activeRecordingTarget === 'katakana' && txtRecordKata) txtRecordKata.textContent = display;
+    if (activeRecordingTarget === 'kanji' && txtRecordKanji) txtRecordKanji.textContent = display;
     return;
   }
 
@@ -275,11 +428,35 @@ window.addEventListener('keydown', (e) => {
     mainKey = e.key.toUpperCase();
   }
 
+  // Smart check for in-app copy shortcuts (hiragana, katakana, kanji):
+  // If the user pressed an alphanumeric key (A-Z, 0-9) without Ctrl or Alt:
+  // Automatically pair with CommandOrControl (Ctrl) so typing words won't get hijacked!
+  const isAlphaNumeric = /^[A-Z0-9]$/.test(mainKey);
+  const hasModifier = e.ctrlKey || e.altKey;
+
+  if (activeRecordingTarget !== 'global' && isAlphaNumeric && !hasModifier) {
+    acceleratorParts.unshift('CommandOrControl');
+    const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
+    const msg = (dict.toastLetterAutoCombo || '💡 Tombol {key} dipasangkan dengan Ctrl ({combo})!')
+      .replace('{key}', mainKey)
+      .replace('{combo}', `Ctrl + ${mainKey}`);
+    showToast(msg);
+  }
+
   acceleratorParts.push(mainKey);
   const newAccelerator = acceleratorParts.join('+');
 
-  recordedShortcut = newAccelerator;
-  stopRecordingShortcut();
+  if (activeRecordingTarget === 'global') {
+    recordedShortcut = newAccelerator;
+  } else if (activeRecordingTarget === 'hiragana') {
+    recordedShortcutHira = newAccelerator;
+  } else if (activeRecordingTarget === 'katakana') {
+    recordedShortcutKata = newAccelerator;
+  } else if (activeRecordingTarget === 'kanji') {
+    recordedShortcutKanji = newAccelerator;
+  }
+
+  stopRecording();
 }, true);
 
 // ==========================================
@@ -518,22 +695,61 @@ btnCancelSettings.addEventListener('click', (e) => {
   closeSettings();
 });
 
-// Shortcut recorder trigger
+// Shortcut recorder triggers
 btnRecordShortcut.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (isRecordingShortcut) {
-    stopRecordingShortcut();
-  } else {
-    startRecordingShortcut();
-  }
+  if (activeRecordingTarget === 'global') stopRecording();
+  else startRecording('global');
 });
 
 btnResetShortcut.addEventListener('click', (e) => {
   e.stopPropagation();
   recordedShortcut = 'Alt+J';
   txtRecordShortcut.textContent = 'Alt + J';
-  stopRecordingShortcut();
-  showToast('✓ Shortcut di-reset ke Alt + J');
+  stopRecording();
+  showToast('✓ Shortcut Buka/Tutup di-reset ke Alt + J');
+});
+
+btnRecordHira.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (activeRecordingTarget === 'hiragana') stopRecording();
+  else startRecording('hiragana');
+});
+
+btnResetHira.addEventListener('click', (e) => {
+  e.stopPropagation();
+  recordedShortcutHira = 'Return';
+  txtRecordHira.textContent = 'Enter';
+  stopRecording();
+  showToast('✓ Shortcut Hiragana di-reset ke Enter');
+});
+
+btnRecordKata.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (activeRecordingTarget === 'katakana') stopRecording();
+  else startRecording('katakana');
+});
+
+btnResetKata.addEventListener('click', (e) => {
+  e.stopPropagation();
+  recordedShortcutKata = 'Shift+Return';
+  txtRecordKata.textContent = 'Shift + Enter';
+  stopRecording();
+  showToast('✓ Shortcut Katakana di-reset ke Shift + Enter');
+});
+
+btnRecordKanji.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (activeRecordingTarget === 'kanji') stopRecording();
+  else startRecording('kanji');
+});
+
+btnResetKanji.addEventListener('click', (e) => {
+  e.stopPropagation();
+  recordedShortcutKanji = 'CommandOrControl+Return';
+  txtRecordKanji.textContent = 'Ctrl + Enter';
+  stopRecording();
+  showToast('✓ Shortcut Kanji di-reset ke Ctrl + Enter');
 });
 
 // Language Pills Click
@@ -552,10 +768,12 @@ pillLangEn.addEventListener('click', () => {
 // Save Settings
 btnSaveSettings.addEventListener('click', async (e) => {
   e.stopPropagation();
+  stopRecording();
 
   applyLanguage(selectedLangTemp);
   updateConversion();
 
+  // 1. Global Window Toggle Shortcut
   const newShortcut = recordedShortcut;
   if (newShortcut !== currentShortcut && window.nihongoAPI && window.nihongoAPI.updateGlobalShortcut) {
     const success = await window.nihongoAPI.updateGlobalShortcut(newShortcut);
@@ -563,15 +781,27 @@ btnSaveSettings.addEventListener('click', async (e) => {
       currentShortcut = newShortcut;
       localStorage.setItem('nihongo_shortcut', newShortcut);
       lblShortcutTag.textContent = formatShortcutLabel(newShortcut);
+      if (btnOpenBubble) btnOpenBubble.title = `Nihongo Keyboard (Klik atau ${formatShortcutLabel(newShortcut)})`;
     } else {
-      const dict = window.I18N[currentLang];
+      const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
       showToast(dict.toastShortcutFailed);
       return;
     }
   }
 
+  // 2. Custom Copy Shortcuts
+  currentShortcutHiragana = recordedShortcutHira;
+  currentShortcutKatakana = recordedShortcutKata;
+  currentShortcutKanji = recordedShortcutKanji;
+
+  localStorage.setItem('nihongo_shortcut_hiragana', currentShortcutHiragana);
+  localStorage.setItem('nihongo_shortcut_katakana', currentShortcutKatakana);
+  localStorage.setItem('nihongo_shortcut_kanji', currentShortcutKanji);
+
+  updateShortcutHints();
+
   closeSettings();
-  const dict = window.I18N[currentLang];
+  const dict = window.I18N && window.I18N[currentLang] ? window.I18N[currentLang] : window.I18N['id'];
   showToast(dict.toastSaved);
 });
 
@@ -601,9 +831,9 @@ romajiInput.addEventListener('input', () => {
   updateConversion();
 });
 
-// Keyboard navigation
+// Keyboard navigation & Copy shortcuts
 romajiInput.addEventListener('keydown', (e) => {
-  if (isRecordingShortcut) return;
+  if (activeRecordingTarget !== null) return;
 
   // Ctrl + T -> Toggle between Romaji and Translate modes!
   if (e.ctrlKey && e.key.toLowerCase() === 't') {
@@ -618,28 +848,31 @@ romajiInput.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (e.key === 'Tab') {
+  // 1. Check Copy Kanji / Meaning Shortcut
+  if (matchesKeyboardEvent(e, currentShortcutKanji)) {
     e.preventDefault();
-    if (currentKatakana && currentKatakana !== '-') {
-      copyAndFinish(currentKatakana);
+    let textToCopy = '';
+    if (currentKanji && currentKanji !== '-') {
+      textToCopy = currentKanji.split('/')[0].trim();
+    } else if (textMeaningKanji.textContent && textMeaningKanji.textContent !== '-') {
+      textToCopy = textMeaningKanji.textContent.trim();
     }
+    if (textToCopy) copyAndFinish(textToCopy);
     return;
   }
 
-  if (e.key === 'Enter') {
+  // 2. Check Copy Katakana Shortcut
+  if (matchesKeyboardEvent(e, currentShortcutKatakana)) {
     e.preventDefault();
-    if (e.ctrlKey) {
-      if (currentKanji && currentKanji !== '-') {
-        const primaryKanji = currentKanji.split('/')[0].trim();
-        copyAndFinish(primaryKanji);
-      } else if (textMeaningKanji.textContent && textMeaningKanji.textContent !== '-') {
-        copyAndFinish(textMeaningKanji.textContent.trim());
-      }
-    } else if (e.shiftKey) {
-      if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
-    } else {
-      if (currentHiragana && currentHiragana !== '-') copyAndFinish(currentHiragana);
-    }
+    if (currentKatakana && currentKatakana !== '-') copyAndFinish(currentKatakana);
+    return;
+  }
+
+  // 3. Check Copy Hiragana Shortcut
+  if (matchesKeyboardEvent(e, currentShortcutHiragana)) {
+    e.preventDefault();
+    if (currentHiragana && currentHiragana !== '-') copyAndFinish(currentHiragana);
+    return;
   }
 });
 
@@ -667,6 +900,7 @@ if (window.nihongoAPI && window.nihongoAPI.onShortcutToggle) {
 (async function init() {
   applyLanguage(currentLang);
   setMode(currentMode);
+  updateShortcutHints();
 
   if (window.nihongoAPI && window.nihongoAPI.getGlobalShortcut) {
     const activeShortcut = await window.nihongoAPI.getGlobalShortcut();
@@ -675,6 +909,7 @@ if (window.nihongoAPI && window.nihongoAPI.onShortcutToggle) {
       recordedShortcut = activeShortcut;
       txtRecordShortcut.textContent = formatShortcutLabel(activeShortcut);
       lblShortcutTag.textContent = formatShortcutLabel(activeShortcut);
+      if (btnOpenBubble) btnOpenBubble.title = `Nihongo Keyboard (Klik atau ${formatShortcutLabel(activeShortcut)})`;
     }
   }
 })();

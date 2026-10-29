@@ -53,7 +53,7 @@ const localTranslationMap = {
 const BUBBLE_WIDTH = 64;
 const BUBBLE_HEIGHT = 64;
 const EXPANDED_WIDTH = 420;
-const EXPANDED_HEIGHT = 285;
+const EXPANDED_HEIGHT = 310;
 
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();

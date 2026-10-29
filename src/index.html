@@ -142,22 +142,61 @@
         <div class="settings-body">
           <!-- Language Option -->
           <div class="setting-item">
-            <label class="setting-label" for="select-lang" id="lbl-setting-lang">Bahasa Tampilan</label>
+            <label class="setting-label" id="lbl-setting-lang">Bahasa Tampilan</label>
             <div class="lang-pills">
               <button type="button" class="lang-pill active" data-lang="id" id="pill-lang-id">🇮🇩 Indonesia</button>
               <button type="button" class="lang-pill" data-lang="en" id="pill-lang-en">🇬🇧 English</button>
             </div>
           </div>
 
-          <!-- Interactive Custom Shortcut Key Recorder -->
+          <!-- Interactive Custom Shortcut Key Recorder (Global) -->
           <div class="setting-item">
-            <label class="setting-label" id="lbl-setting-shortcut">Shortcut Global</label>
+            <label class="setting-label" id="lbl-setting-shortcut">Buka / Tutup Bar</label>
             <div class="shortcut-recorder-wrap">
-              <button type="button" id="btn-record-shortcut" class="btn-record-shortcut" title="Klik lalu tekan kombinasi tombol apa pun di keyboard">
+              <button type="button" id="btn-record-shortcut" class="btn-record-shortcut" data-target="global" title="Klik lalu tekan kombinasi tombol apa pun di keyboard">
                 <span id="txt-record-shortcut">Alt + J</span>
                 <span class="record-badge" id="lbl-record-badge">Klik ubah</span>
               </button>
-              <button type="button" id="btn-reset-shortcut" class="btn-reset-shortcut" title="Kembalikan ke default (Alt + J)">↺</button>
+              <button type="button" id="btn-reset-shortcut" class="btn-reset-shortcut" data-target="global" title="Kembalikan ke default (Alt + J)">↺</button>
+            </div>
+          </div>
+
+          <!-- Section Divider: Copy Shortcuts -->
+          <div class="settings-section-divider" id="lbl-section-copy">Shortcut Salin Keyboard</div>
+
+          <!-- Copy Hiragana -->
+          <div class="setting-item">
+            <label class="setting-label" id="lbl-setting-copy-hira">Salin Hiragana</label>
+            <div class="shortcut-recorder-wrap">
+              <button type="button" id="btn-record-hira" class="btn-record-shortcut" data-target="hiragana" title="Klik lalu tekan shortcut untuk salin Hiragana">
+                <span id="txt-record-hira">Enter</span>
+                <span class="record-badge" id="lbl-record-badge-hira">Klik ubah</span>
+              </button>
+              <button type="button" id="btn-reset-hira" class="btn-reset-shortcut" data-target="hiragana" title="Kembalikan ke default (Enter)">↺</button>
+            </div>
+          </div>
+
+          <!-- Copy Katakana -->
+          <div class="setting-item">
+            <label class="setting-label" id="lbl-setting-copy-kata">Salin Katakana</label>
+            <div class="shortcut-recorder-wrap">
+              <button type="button" id="btn-record-kata" class="btn-record-shortcut" data-target="katakana" title="Klik lalu tekan shortcut untuk salin Katakana">
+                <span id="txt-record-kata">Shift + Enter</span>
+                <span class="record-badge" id="lbl-record-badge-kata">Klik ubah</span>
+              </button>
+              <button type="button" id="btn-reset-kata" class="btn-reset-shortcut" data-target="katakana" title="Kembalikan ke default (Shift + Enter)">↺</button>
+            </div>
+          </div>
+
+          <!-- Copy Kanji / Makna -->
+          <div class="setting-item">
+            <label class="setting-label" id="lbl-setting-copy-kanji">Salin Kanji / Makna</label>
+            <div class="shortcut-recorder-wrap">
+              <button type="button" id="btn-record-kanji" class="btn-record-shortcut" data-target="kanji" title="Klik lalu tekan shortcut untuk salin Kanji">
+                <span id="txt-record-kanji">Ctrl + Enter</span>
+                <span class="record-badge" id="lbl-record-badge-kanji">Klik ubah</span>
+              </button>
+              <button type="button" id="btn-reset-kanji" class="btn-reset-shortcut" data-target="kanji" title="Kembalikan ke default (Ctrl + Enter)">↺</button>
             </div>
           </div>
         </div>
