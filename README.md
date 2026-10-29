@@ -94,6 +94,7 @@ Hasil file `.exe` siap pakai akan otomatis berada di folder:
 
 ---
 
-## 📜 Lisensi
+## 📜 Hak Cipta & Lisensi
 
-Didistribusikan di bawah lisensi **GNU General Public License v3.0 (GPLv3)**. Lihat file `LICENSE` untuk informasi lebih lanjut.
+Copyright © 2026 Ghilman Yazid (XreoOZ). All Rights Reserved.  
+Software ini bersifat **Proprietary & Closed-Source**. Dilarang mendistribusikan ulang, menyalin, atau memperjualbelikan kode sumber tanpa izin tertulis dari pemilik hak cipta.

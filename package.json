@@ -33,7 +33,8 @@
     "electron"
   ],
   "author": "XreoOZ <ghilmanyazid337@gmail.com>",
-  "license": "GPL-3.0-or-later",
+  "license": "UNLICENSED",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/XreoOZ/Nihongo-Keyboard.git"
